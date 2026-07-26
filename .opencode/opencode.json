@@ -1,0 +1,12 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-mem"],
+  "skills": {
+    "paths": ["C:\\Users\\DELL\\.config\\opencode\\skills"]
+  },
+  "compaction": {
+    "auto": true,
+    "tail_turns": 5,
+    "reserved": 32000
+  }
+}

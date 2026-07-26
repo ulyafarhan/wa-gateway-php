@@ -1,0 +1,14 @@
+{
+  "name": "wa-gateway-sdk",
+  "version": "1.0.0",
+  "description": "Node.js SDK for wa-gateway WhatsApp API",
+  "type": "module",
+  "main": "src/index.mjs",
+  "types": "src/types.d.ts",
+  "scripts": {
+    "test": "node test.mjs"
+  },
+  "keywords": ["whatsapp", "gateway", "api", "sdk"],
+  "author": "wa-gateway",
+  "license": "MIT"
+}

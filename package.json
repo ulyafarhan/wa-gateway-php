@@ -1,0 +1,36 @@
+{
+  "name": "wa-gateway",
+  "version": "4.0.0",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs",
+    "dev:frontend": "cd vue-tailwind-admin-dashboard-main && npx vite",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:frontend\"",
+    "build:frontend": "cd vue-tailwind-admin-dashboard-main && npm run build",
+    "postinstall": "cd vue-tailwind-admin-dashboard-main && npm install",
+    "pretest": "node --check server.mjs",
+    "test": "node --test test/",
+    "test:watch": "node --watch --test test/"
+  },
+  "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.23",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.11.1",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.0.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "pino": "^9.5.0",
+    "qrcode": "^1.5.4",
+    "socks-proxy-agent": "^8.0.2"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "tailwindcss": "^4.3.3"
+  }
+}

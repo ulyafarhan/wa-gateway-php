@@ -1,0 +1,86 @@
+{
+  "currency": "IDR",
+  "plans": [
+    {
+      "name": "Free",
+      "price_monthly": 0,
+      "price_yearly": 0,
+      "sessions": 1,
+      "messages_per_day": 50,
+      "ai_messages_per_day": 0,
+      "broadcasts_per_day": 0,
+      "contacts": 100,
+      "api_access": false,
+      "support": "community",
+      "features": ["Dashboard monitoring", "1 nomor WhatsApp"]
+    },
+    {
+      "name": "Starter",
+      "price_monthly": 50000,
+      "price_yearly": 500000,
+      "sessions": 3,
+      "messages_per_day": 500,
+      "ai_messages_per_day": 100,
+      "broadcasts_per_day": 1,
+      "contacts": 1000,
+      "api_access": true,
+      "support": "email",
+      "features": [
+        "3 nomor WhatsApp",
+        "AI balas pesan (100x/hari)",
+        "FAQ otomatis",
+        "Webhook API",
+        "SDK PHP + Node.js"
+      ]
+    },
+    {
+      "name": "Pro",
+      "price_monthly": 150000,
+      "price_yearly": 1500000,
+      "sessions": 10,
+      "messages_per_day": 5000,
+      "ai_messages_per_day": 1000,
+      "broadcasts_per_day": 10,
+      "contacts": 10000,
+      "api_access": true,
+      "support": "priority",
+      "features": [
+        "10 nomor WhatsApp",
+        "AI balas pesan (1000x/hari)",
+        "Multi-provider AI (OpenAI, Anthropic, dll)",
+        "Broadcast campaign",
+        "Analytics dashboard",
+        "Prioritas server"
+      ]
+    },
+    {
+      "name": "Enterprise",
+      "price_monthly": "custom",
+      "price_yearly": "custom",
+      "sessions": "unlimited",
+      "messages_per_day": "unlimited",
+      "ai_messages_per_day": "unlimited",
+      "broadcasts_per_day": "unlimited",
+      "contacts": "unlimited",
+      "api_access": true,
+      "support": "dedicated",
+      "features": [
+        "Unlimited sessions",
+        "Dedicated proxy/IP",
+        "Custom AI model",
+        "SLA guarantee",
+        "On-premise deployment",
+        "Dedicated support"
+      ]
+    }
+  ],
+  "cost_analysis": {
+    "vps": 150000,
+    "domain": 15000,
+    "ai_api_million_tokens": 2500,
+    "break_even": {
+      "starter": "2 pelanggan/bulan",
+      "pro": "1 pelanggan/bulan"
+    }
+  }
+}

@@ -1,0 +1,139 @@
+// ponytail: WhatsApp Gateway v5 — multi-tenant, priority queue, access+refresh token auth
+import 'dotenv/config';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
+import cors from 'cors';
+import pino from 'pino';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import db from './src/db.js';
+import apiRouter from './src/routes/api.js';
+import adminRouter from './src/routes/admin.js';
+import { connectSession, sessions } from './src/session.js';
+import { startWebhookProcessor } from './src/webhook.js';
+import { startBroadcastProcessor } from './src/broadcast.js';
+import { createUser, getUserByUsername } from './src/auth.js';
+import { errorHandler } from './src/middleware/error-handler.js';
+import { startSync, stopSync } from './src/sync.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const app = express();
+const PORT = parseInt(process.env.PORT || '2785', 10);
+const logger = pino({ level: process.env.LOG_LEVEL || 'silent' });
+
+// Seed admin user
+if (process.env.SEED_ADMIN_USER && process.env.SEED_ADMIN_PASS) {
+    if (!getUserByUsername(process.env.SEED_ADMIN_USER)) {
+        createUser({
+            username: process.env.SEED_ADMIN_USER,
+            email: process.env.SEED_ADMIN_EMAIL || 'admin@wagateway.local',
+            password: process.env.SEED_ADMIN_PASS,
+            role: 'superadmin'
+        });
+        logger.info(`Seed admin user created: ${process.env.SEED_ADMIN_USER}`);
+    }
+}
+
+// Middleware
+app.set('trust proxy', 1);
+app.use(cookieParser());
+app.use(express.json({ limit: '1mb' }));
+
+// ponytail: security headers
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "cdn.tailwindcss.com"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:"],
+            connectSrc: ["'self'", "ws:", "wss:"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            formAction: ["'self'"],
+        },
+    },
+    hsts: { maxAge: 31536000, includeSubDomains: true },
+}));
+app.use((_req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    next();
+});
+
+// ponytail: CORS
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || 'https://wa.gampong.web.id,http://localhost:2785,http://localhost:5173').split(',');
+app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
+
+// Static files — Vue SPA build (base: /admin/)
+const frontendDist = path.join(__dirname, 'frontend', 'dist');
+app.use('/admin/assets', express.static(path.join(frontendDist, 'assets'), { maxAge: '7d', immutable: true }));
+app.get('/admin/favicon.ico', (_, r) => r.sendFile(path.join(frontendDist, 'favicon.ico')));
+
+// Landing page
+const landingHtml = fs.readFileSync(path.join(__dirname, 'public', 'landing.html'), 'utf-8');
+app.get('/', (req, res) => res.set('Content-Type', 'text/html; charset=utf-8').send(landingHtml));
+
+// Admin SPA — catch-all for /admin/* routes
+const indexHtml = fs.readFileSync(path.join(frontendDist, 'index.html'), 'utf-8');
+app.use('/admin', (req, res) => {
+  if (req.method === 'GET') {
+    res.set('Content-Type', 'text/html; charset=utf-8').send(indexHtml);
+  } else {
+    res.status(404).json({ error: 'Not found' });
+  }
+});
+
+// API routes
+app.use(adminRouter);
+app.use(apiRouter);
+
+// Health endpoint
+app.get('/api/health', (req, res) => res.json({ status: 'ok', uptime: Math.round(process.uptime()), sessions: db.prepare('SELECT COUNT(*) as c FROM sessions').get().c }));
+
+// SPA fallback — non-API GET routes go to Vue app
+app.use((req, res, next) => {
+  if (req.method === 'GET' && !req.path.startsWith('/api/') && !req.path.startsWith('/assets/')) {
+    return res.set('Content-Type', 'text/html; charset=utf-8').send(indexHtml);
+  }
+  next();
+});
+
+// Error handler
+app.use(errorHandler);
+
+// Start
+startWebhookProcessor();
+startBroadcastProcessor();
+startSync();
+
+// GC periodik — 414MB VPS
+if (global.gc) setInterval(() => global.gc(), 300000);
+
+app.listen(PORT, process.env.HOST || '0.0.0.0', () => {
+    logger.info(`WhatsApp Gateway v5 running on http://localhost:${PORT}`);
+    const existing = db.prepare('SELECT session_id FROM sessions').all();
+    for (const { session_id } of existing) {
+        connectSession(session_id).catch(e => logger.error(`[${session_id}] ${e.message}`));
+    }
+});
+
+async function shutdown() {
+    logger.info('Shutting down...');
+    for (const [sid, session] of sessions.entries()) {
+        if (session.sock) {
+            try { await session.sock.logout(); } catch {}
+            try { session.sock.end(); } catch {}
+        }
+    }
+    stopSync();
+    db.pragma('wal_checkpoint(TRUNCATE)');
+    db.close();
+    process.exit(0);
+}
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);

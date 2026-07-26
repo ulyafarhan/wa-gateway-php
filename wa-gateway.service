@@ -1,0 +1,15 @@
+[Unit]
+Description=WA Gateway v4 - SIG-Udeung
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ubuntu/wa-gateway
+ExecStart=/home/ubuntu/.nvm/versions/node/v24.18.0/bin/node server.mjs
+Restart=always
+RestartSec=5
+User=ubuntu
+EnvironmentFile=/home/ubuntu/wa-gateway/.env
+
+[Install]
+WantedBy=multi-user.target
