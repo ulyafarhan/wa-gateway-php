@@ -472,4 +472,10 @@ Systemd service: `wa-gateway.service` — running di belakang nginx + Cloudflare
 
 ## License
 
-MIT
+**GNU Affero General Public License v3.0 (AGPL-3.0)**
+
+- ✅ **Gratis untuk penggunaan individu** — pribadi, non-komersial, bebas.
+- ⚠️ **Wajib buka kode jika dijual** — jika kamu menjual layanan ini atau mengintegrasikannya ke produk bisnis, **seluruh kode turunan WAJIB dibuka** di bawah lisensi yang sama (AGPL).
+- ⚠️ **Wajib buka kode jika dimodifikasi** — setiap modifikasi yang didistribusikan atau dijalankan sebagai layanan publik harus disertai akses ke source code.
+
+Ini adalah **AGPL**, bukan MIT. Tujuannya: menjaga ekosistem tetap terbuka dan mencegah eksploitasi komersial tanpa kontribusi balik. Lihat [LICENSE](LICENSE) untuk detail lengkap.
