@@ -133,9 +133,11 @@ Semua endpoint (kecuali `/api/health`) dilindungi oleh **X-API-Key** jika `API_K
 | `PUT` | `/api/sessions/:id/webhook` | Set webhook URL & secret per sesi |
 | `DELETE` | `/api/sessions/:id` | Hapus sesi (logout + bersihkan auth state) |
 | **Messages** | | |
-| `POST` | `/api/sessions/:id/messages` | Kirim pesan (text/image/audio/document) |
+| `POST` | `/api/sessions/:id/messages` | Kirim pesan (text/image/audio/document/buttons/list) |
 | `POST` | `/api/sessions/:id/messages/send-text` | Kirim teks cepat |
 | `POST` | `/api/sessions/:id/messages/send-image` | Kirim gambar (URL) |
+| `POST` | `/api/sessions/:id/messages/send-buttons` | Kirim interactive buttons |
+| `POST` | `/api/sessions/:id/messages/send-list` | Kirim interactive list |
 | `POST` | `/api/sessions/:id/broadcast` | Broadcast teks ke banyak nomor |
 | `GET` | `/api/sessions/:id/messages` | Riwayat 50 pesan terakhir |
 | `GET` | `/api/sessions/:id/incoming` | 50 pesan masuk terakhir via webhook |
@@ -164,6 +166,22 @@ Semua endpoint (kecuali `/api/health`) dilindungi oleh **X-API-Key** jika `API_K
 curl -X POST http://localhost:2785/api/sessions/my-wa/messages \
   -H 'Content-Type: application/json' \
   -d '{"chatId": "628123456789@s.whatsapp.net", "text": "Halo, ini pesan dari gateway"}'
+```
+
+### Contoh kirim buttons
+
+```bash
+curl -X POST http://localhost:2785/api/sessions/my-wa/messages/send-buttons \
+  -H 'Content-Type: application/json' \
+  -d '{"chatId": "628123456789@s.whatsapp.net", "text": "Pilih menu:", "footer": "Balas dengan tombol", "buttons": [{"id": "1", "text": "Info"}, {"id": "2", "text": "Promo"}, {"id": "3", "text": "CS"}]}'
+```
+
+### Contoh kirim list
+
+```bash
+curl -X POST http://localhost:2785/api/sessions/my-wa/messages/send-list \
+  -H 'Content-Type: application/json' \
+  -d '{"chatId": "628123456789@s.whatsapp.net", "text": "Pilih produk:", "title": "Katalog", "buttonText": "Lihat", "sections": [{"title": "Minuman", "rows": [{"id": "kopi", "title": "Kopi Aceh", "description": "Rp5.000"}, {"id": "teh", "title": "Teh Manis", "description": "Rp3.000"}]}]}'
 ```
 
 ### Contoh broadcast
