@@ -651,6 +651,49 @@ router.post('/api/sessions/:id/labels/:labelId/unassign', requireTenantOwnership
     res.json({ success: true });
 });
 
+// ── Inbox — recent chats with last message ─────────────────────────────
+router.get('/api/sessions/:id/inbox', requireTenantOwnership, (req, res) => {
+    const limit = parseInt(req.query.limit || '50');
+    const chats = db.prepare(`
+        SELECT m.chat_id, MAX(m.created_at) as last_time,
+               (SELECT payload FROM messages WHERE session_id = ? AND chat_id = m.chat_id ORDER BY created_at DESC LIMIT 1) as last_payload,
+               (SELECT status FROM messages WHERE session_id = ? AND chat_id = m.chat_id ORDER BY created_at DESC LIMIT 1) as last_status,
+               COUNT(CASE WHEN status = 'queued' THEN 1 END) as unread
+        FROM messages m WHERE m.session_id = ?
+        GROUP BY m.chat_id ORDER BY last_time DESC LIMIT ?
+    `).all(req.params.id, req.params.id, req.params.id, limit);
+
+    res.json(chats.map(c => {
+        let preview = '';
+        try { const p = JSON.parse(c.last_payload || '{}'); preview = p.text || ''; } catch {}
+        return {
+            chat_id: c.chat_id,
+            last_time: c.last_time,
+            preview: preview.slice(0, 100),
+            unread: c.unread || 0,
+            status: c.last_status,
+        };
+    }));
+});
+
+router.get('/api/sessions/:id/inbox/:chatId', requireTenantOwnership, (req, res) => {
+    const messages = db.prepare(`
+        SELECT id, chat_id, type, payload, status, created_at,
+               CASE WHEN direction = 'incoming' OR status = 'received' THEN 0 ELSE 1 END as from_me
+        FROM messages WHERE session_id = ? AND chat_id = ?
+        ORDER BY created_at ASC LIMIT 100
+    `).all(req.params.id, req.params.chatId);
+
+    res.json(messages.map(m => {
+        let text = '';
+        try { const p = JSON.parse(m.payload || '{}'); text = p.text || ''; } catch {}
+        return {
+            id: m.id, text, from_me: m.from_me,
+            created_at: m.created_at, status: m.status,
+        };
+    }));
+});
+
 function tryParse(str) { if (!str) return null; try { return JSON.parse(str); } catch { return str; } }
 
 export default router;

@@ -31,6 +31,21 @@ export function enqueueWebhook(sessionId, event, payload) {
     const data = JSON.stringify({ event, session_id: sessionId, sequence: seq, ...payload, timestamp: Date.now() });
     db.prepareInsertWebhook.run(id, sessionId, event, data, Date.now());
     deliver(id, wh, data, sessionId);
+    
+    // Broadcast to WebSocket clients (inbox real-time)
+    try { broadcastToWs(sessionId, event, data); } catch {}
+}
+
+function broadcastToWs(sessionId, event, data) {
+    try {
+        const parsed = JSON.parse(data);
+        const msg = JSON.stringify({ type: event, session_id: sessionId, data: parsed, timestamp: Date.now() });
+        if (typeof globalThis.__wsClients !== 'undefined' && globalThis.__wsClients?.size) {
+            for (const ws of globalThis.__wsClients) {
+                try { ws.send(msg); } catch { globalThis.__wsClients.delete(ws); }
+            }
+        }
+    } catch {}
 }
 
 export async function deliver(id, wh, data, sessionId) {

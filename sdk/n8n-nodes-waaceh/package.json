@@ -1,0 +1,16 @@
+{
+  "name": "@waaceh/n8n-nodes-waaceh",
+  "version": "1.0.0",
+  "description": "WaAceh WhatsApp Gateway n8n nodes",
+  "keywords": ["n8n-community-node-package", "waaceh", "whatsapp"],
+  "license": "AGPL-3.0",
+  "homepage": "https://waaceh.biz.id",
+  "author": { "name": "WaAceh", "email": "sales@waaceh.id" },
+  "repository": { "type": "git", "url": "https://github.com/ulyafarhan/wa-gateway-php.git" },
+  "main": "index.js",
+  "scripts": { "build": "tsc && cp -r dist/* .", "dev": "tsc --watch" },
+  "files": ["**/*.js", "**/*.json"],
+  "n8n": { "n8nNodesApiVersion": 1, "nodes": ["WaAcehTrigger", "WaAcehSend"] },
+  "dependencies": { "axios": "^1.7.0" },
+  "devDependencies": { "typescript": "^5.5.0", "@types/node": "^20.0.0" }
+}

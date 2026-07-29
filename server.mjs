@@ -116,6 +116,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── WebSocket ────────────────────────────────────────────────────────────
+import { createServer } from 'http';
+import { startWebSocketServer, broadcastEvent } from './src/ws.js';
+
+const server = createServer(app);
+startWebSocketServer(server);
+
+
+
 // ── MCP Server ──────────────────────────────────────────────────────────
 import { handleMcpRequest } from './src/mcp.js';
 app.post('/mcp', (req, res, next) => {
@@ -143,7 +152,7 @@ setInterval(() => {
     db.prepare('DELETE FROM behavior_outbox WHERE created_at < ?').run(cutoff);
 }, 3600000);
 
-app.listen(PORT, process.env.HOST || '0.0.0.0', () => {
+server.listen(PORT, process.env.HOST || '0.0.0.0', () => {
     logger.info(`WhatsApp Gateway v5 running on http://localhost:${PORT}`);
     const existing = db.prepare('SELECT session_id FROM sessions').all();
     for (const { session_id } of existing) {
