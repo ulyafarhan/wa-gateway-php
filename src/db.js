@@ -171,6 +171,20 @@ db.exec(`
         created_at INTEGER
     );
 
+    CREATE TABLE IF NOT EXISTS chat_labels (
+        id TEXT PRIMARY KEY, session_id TEXT NOT NULL,
+        name TEXT NOT NULL, color TEXT DEFAULT '#6366f1',
+        created_at INTEGER
+    );
+
+    CREATE TABLE IF NOT EXISTS chat_label_mapping (
+        id TEXT PRIMARY KEY, session_id TEXT NOT NULL,
+        chat_id TEXT NOT NULL, label_id TEXT NOT NULL,
+        created_at INTEGER,
+        FOREIGN KEY (label_id) REFERENCES chat_labels(id) ON DELETE CASCADE,
+        UNIQUE(session_id, chat_id, label_id)
+    );
+
     CREATE TABLE IF NOT EXISTS tenant_packages (
         id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL,
         package_name TEXT NOT NULL DEFAULT 'starter',
@@ -250,6 +264,24 @@ const upColumns = db.prepare("PRAGMA table_info(user_profiles)").all().map(c => 
 if (!upColumns.includes('group_id')) {
     db.exec("ALTER TABLE user_profiles ADD COLUMN group_id TEXT REFERENCES contact_groups(id)");
     console.log('[db] Migration: added group_id to user_profiles');
+}
+
+// ── Migration: chat_labels ──────────────────────────────────────────────
+const clColumns = db.prepare("PRAGMA table_info(chat_labels)").all().map(c => c.name);
+if (clColumns.length === 0) {
+    db.exec(`CREATE TABLE IF NOT EXISTS chat_labels (
+        id TEXT PRIMARY KEY, session_id TEXT NOT NULL,
+        name TEXT NOT NULL, color TEXT DEFAULT '#6366f1',
+        created_at INTEGER
+    )`);
+    db.exec(`CREATE TABLE IF NOT EXISTS chat_label_mapping (
+        id TEXT PRIMARY KEY, session_id TEXT NOT NULL,
+        chat_id TEXT NOT NULL, label_id TEXT NOT NULL,
+        created_at INTEGER,
+        FOREIGN KEY (label_id) REFERENCES chat_labels(id) ON DELETE CASCADE,
+        UNIQUE(session_id, chat_id, label_id)
+    )`);
+    console.log('[db] Migration: created chat_labels + chat_label_mapping');
 }
 
 // ── Seed default roles ──────────────────────────────────────────────────

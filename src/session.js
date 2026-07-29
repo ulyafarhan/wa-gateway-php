@@ -258,6 +258,33 @@ async function processQueue(sessionId) {
                         }))
                     }))
                 });
+            } else if (msg.type === 'sticker') {
+                result = await session.sock.sendMessage(jid, {
+                    sticker: { url: msg.stickerUrl }
+                });
+            } else if (msg.type === 'contact') {
+                result = await session.sock.sendMessage(jid, {
+                    contacts: {
+                        displayName: msg.contactName || '',
+                        contacts: [{ vcard: msg.vcard }]
+                    }
+                });
+            } else if (msg.type === 'location') {
+                result = await session.sock.sendMessage(jid, {
+                    location: {
+                        degreesLatitude: msg.latitude,
+                        degreesLongitude: msg.longitude,
+                        caption: msg.caption || ''
+                    }
+                });
+            } else if (msg.type === 'poll') {
+                result = await session.sock.sendMessage(jid, {
+                    poll: {
+                        name: msg.pollQuestion || 'Polling',
+                        values: (msg.pollOptions || []).map(o => ({ optionName: o })),
+                        selectableCount: msg.selectableCount || 1
+                    }
+                });
             } else {
                 result = await session.sock.sendMessage(jid, { text: msg.text });
             }
@@ -280,13 +307,13 @@ async function processQueue(sessionId) {
     session.processing = false;
 }
 
-export function enqueueMessage(sessionId, { chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText, priority }) {
+export function enqueueMessage(sessionId, { chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText, stickerUrl, contactName, vcard, latitude, longitude, pollQuestion, pollOptions, selectableCount, priority }) {
     const session = getOrCreateSession(sessionId);
     const messageId = crypto.randomUUID();
-    const payload = JSON.stringify({ chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText });
+    const payload = JSON.stringify({ chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText, stickerUrl, contactName, vcard, latitude, longitude, pollQuestion, pollOptions, selectableCount });
 
     db.prepareInsertMessage.run(messageId, sessionId, chatId, type, payload, Date.now());
-    session.queue.push({ chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText, messageId, priority: priority || 'normal' });
+    session.queue.push({ chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText, stickerUrl, contactName, vcard, latitude, longitude, pollQuestion, pollOptions, selectableCount, messageId, priority: priority || 'normal' });
 
     if (session.status === 'connected' && !session.processing) {
         processQueue(sessionId);
@@ -321,6 +348,142 @@ export function deleteSession(sessionId) {
 
 export function setWebhook(sessionId, url, secret) {
     db.prepareUpdateSessionWebhook.run(url || null, secret || null, Date.now(), sessionId);
+}
+
+export async function sendReaction(sessionId, chatId, messageId, emoji) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jid = chatId.includes('@') ? chatId : `${chatId}@s.whatsapp.net`;
+    await session.sock.sendMessage(jid, {
+        react: { text: emoji, key: { id: messageId, remoteJid: jid } }
+    });
+    enqueueWebhook(sessionId, 'message.reaction', { chat_id: chatId, message_id: messageId, emoji });
+}
+
+export async function editMessage(sessionId, chatId, messageId, newText) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jid = chatId.includes('@') ? chatId : `${chatId}@s.whatsapp.net`;
+    await session.sock.sendMessage(jid, {
+        edit: { id: messageId, remoteJid: jid },
+        text: newText
+    });
+    enqueueWebhook(sessionId, 'message.edited', { chat_id: chatId, message_id: messageId });
+}
+
+export async function setProfileName(sessionId, name) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    await session.sock.updateProfileName(name);
+}
+
+export async function setProfileStatus(sessionId, status) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    await session.sock.updateProfileStatus(status);
+}
+
+export async function setProfilePicture(sessionId, imageUrl) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const img = await (await fetch(imageUrl)).arrayBuffer();
+    await session.sock.updateProfilePicture(session.sock.user.id, img);
+}
+
+export async function blockContact(sessionId, chatId, block = true) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jid = chatId.includes('@') ? chatId : `${chatId}@s.whatsapp.net`;
+    await session.sock.updateBlock(block ? 'block' : 'unblock', jid);
+    enqueueWebhook(sessionId, block ? 'contact.blocked' : 'contact.unblocked', { chat_id: chatId });
+}
+
+export async function muteChat(sessionId, chatId, muteDuration = null) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jid = chatId.includes('@') ? chatId : `${chatId}@s.whatsapp.net`;
+    await session.sock.chatModify({ mute: muteDuration || 86400 * 365 * 100, jid }, []);
+}
+
+export async function groupCreate(sessionId, title, participants = []) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jids = participants.map(p => p.includes('@') ? p : `${p}@s.whatsapp.net`);
+    const group = await session.sock.groupCreate(title, jids);
+    enqueueWebhook(sessionId, 'group.created', { group_id: group.id, title });
+    return group;
+}
+
+export async function groupInviteCode(sessionId, groupId) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const code = await session.sock.groupInviteCode(groupId);
+    return { invite_code: code, invite_link: `https://chat.whatsapp.com/${code}` };
+}
+
+export async function groupAcceptInvite(sessionId, inviteCode) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    return await session.sock.groupAcceptInvite(inviteCode);
+}
+
+export async function groupLeave(sessionId, groupId) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    await session.sock.groupLeave(groupId);
+    enqueueWebhook(sessionId, 'group.left', { group_id: groupId });
+}
+
+export async function groupAddParticipants(sessionId, groupId, participants) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jids = participants.map(p => p.includes('@') ? p : `${p}@s.whatsapp.net`);
+    await session.sock.groupParticipantsUpdate(groupId, jids, 'add');
+}
+
+export async function groupRemoveParticipants(sessionId, groupId, participants) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jids = participants.map(p => p.includes('@') ? p : `${p}@s.whatsapp.net`);
+    await session.sock.groupParticipantsUpdate(groupId, jids, 'remove');
+}
+
+export async function groupSetSubject(sessionId, groupId, subject) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    await session.sock.groupUpdateSubject(groupId, subject);
+}
+
+export async function groupSetDescription(sessionId, groupId, description) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    await session.sock.groupUpdateDescription(groupId, description);
+}
+
+export async function groupSettings(sessionId, groupId, settings) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    if (settings.announce) await session.sock.groupSettingUpdate(groupId, 'announcement');
+    else await session.sock.groupSettingUpdate(groupId, 'not_announce');
+    if (settings.restrict) await session.sock.groupSettingUpdate(groupId, 'locked');
+    else await session.sock.groupSettingUpdate(groupId, 'unlocked');
+}
+
+export async function getGroupMetadata(sessionId, groupId) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    return await session.sock.groupMetadata(groupId);
+}
+
+export async function createPoll(sessionId, chatId, question, options, selectableCount = 1) {
+    const session = sessions.get(sessionId);
+    if (!session?.sock) throw new Error('Session not connected');
+    const jid = chatId.includes('@') ? chatId : `${chatId}@s.whatsapp.net`;
+    const result = await session.sock.sendMessage(jid, {
+        poll: { name: question, values: options.map(o => ({ optionName: o })), selectableCount }
+    });
+    enqueueWebhook(sessionId, 'poll.created', { chat_id: chatId, question, options });
+    return result;
 }
 
 export { sessions, connectSession };

@@ -1,6 +1,10 @@
 // ponytail: routes — REST API for WhatsApp gateway + behavior engine + multi-tenant
 import express from 'express';
-import { connectSession, enqueueMessage, getSessionStatus, deleteSession, setWebhook, sessions } from '../session.js';
+import { connectSession, enqueueMessage, getSessionStatus, deleteSession, setWebhook, sessions,
+    sendReaction, editMessage, setProfileName, setProfileStatus, setProfilePicture,
+    blockContact, muteChat, groupCreate, groupInviteCode, groupAcceptInvite,
+    groupLeave, groupAddParticipants, groupRemoveParticipants, groupSetSubject,
+    groupSetDescription, groupSettings, getGroupMetadata, createPoll } from '../session.js';
 import { enqueueBroadcast } from '../broadcast.js';
 import db from '../db.js';
 import crypto from 'crypto';
@@ -466,6 +470,184 @@ router.put('/api/sessions/:id/users/:userId/group', requireTenantOwnership, (req
     const now = Date.now();
     db.prepare('UPDATE user_profiles SET group_id = ?, updated_at = ? WHERE user_id = ? AND session_id = ?')
         .run(group_id || null, now, req.params.userId, req.params.id);
+    res.json({ success: true });
+});
+
+// ── Reactions ───────────────────────────────────────────────────────────
+router.post('/api/sessions/:id/messages/react', requireTenantOwnership, async (req, res) => {
+    const { chatId, messageId, emoji } = req.body;
+    if (!chatId || !messageId || !emoji) return res.status(400).json({ error: 'chatId, messageId, emoji required' });
+    try { await sendReaction(req.params.id, chatId, messageId, emoji); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Message Edit ────────────────────────────────────────────────────────
+router.put('/api/sessions/:id/messages/:messageId', requireTenantOwnership, async (req, res) => {
+    const { chatId, text } = req.body;
+    if (!chatId || !text) return res.status(400).json({ error: 'chatId and text required' });
+    try { await editMessage(req.params.id, chatId, req.params.messageId, text); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Profile ─────────────────────────────────────────────────────────────
+router.put('/api/sessions/:id/profile/name', requireTenantOwnership, async (req, res) => {
+    const { name } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    try { await setProfileName(req.params.id, name); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/api/sessions/:id/profile/status', requireTenantOwnership, async (req, res) => {
+    const { status } = req.body;
+    try { await setProfileStatus(req.params.id, status || ''); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/api/sessions/:id/profile/picture', requireTenantOwnership, async (req, res) => {
+    const { imageUrl } = req.body;
+    if (!imageUrl) return res.status(400).json({ error: 'imageUrl required' });
+    try { await setProfilePicture(req.params.id, imageUrl); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Block/Unblock ─────────────────────────────────────────────────────
+router.post('/api/sessions/:id/block', requireTenantOwnership, async (req, res) => {
+    const { chatId } = req.body;
+    if (!chatId) return res.status(400).json({ error: 'chatId required' });
+    try { await blockContact(req.params.id, chatId, true); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/api/sessions/:id/unblock', requireTenantOwnership, async (req, res) => {
+    const { chatId } = req.body;
+    if (!chatId) return res.status(400).json({ error: 'chatId required' });
+    try { await blockContact(req.params.id, chatId, false); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Mute ────────────────────────────────────────────────────────────────
+router.post('/api/sessions/:id/mute', requireTenantOwnership, async (req, res) => {
+    const { chatId, duration } = req.body;
+    if (!chatId) return res.status(400).json({ error: 'chatId required' });
+    try { await muteChat(req.params.id, chatId, duration || null); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Groups ──────────────────────────────────────────────────────────────
+router.post('/api/sessions/:id/groups/create', requireTenantOwnership, async (req, res) => {
+    const { title, participants } = req.body;
+    if (!title) return res.status(400).json({ error: 'title required' });
+    try { const g = await groupCreate(req.params.id, title, participants || []); res.json({ success: true, group: g }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/api/sessions/:id/groups/:groupId/invite', requireTenantOwnership, async (req, res) => {
+    try { const data = await groupInviteCode(req.params.id, req.params.groupId); res.json(data); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/api/sessions/:id/groups/join', requireTenantOwnership, async (req, res) => {
+    const { inviteCode } = req.body;
+    if (!inviteCode) return res.status(400).json({ error: 'inviteCode required' });
+    try { const g = await groupAcceptInvite(req.params.id, inviteCode); res.json({ success: true, group: g }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/api/sessions/:id/groups/:groupId/leave', requireTenantOwnership, async (req, res) => {
+    try { await groupLeave(req.params.id, req.params.groupId); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.post('/api/sessions/:id/groups/:groupId/participants', requireTenantOwnership, async (req, res) => {
+    const { action, participants } = req.body;
+    if (!action || !participants?.length) return res.status(400).json({ error: 'action and participants required' });
+    try {
+        if (action === 'add') await groupAddParticipants(req.params.id, req.params.groupId, participants);
+        else if (action === 'remove') await groupRemoveParticipants(req.params.id, req.params.groupId, participants);
+        else return res.status(400).json({ error: 'action must be add or remove' });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/api/sessions/:id/groups/:groupId/subject', requireTenantOwnership, async (req, res) => {
+    const { subject } = req.body;
+    if (!subject) return res.status(400).json({ error: 'subject required' });
+    try { await groupSetSubject(req.params.id, req.params.groupId, subject); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/api/sessions/:id/groups/:groupId/description', requireTenantOwnership, async (req, res) => {
+    const { description } = req.body;
+    try { await groupSetDescription(req.params.id, req.params.groupId, description || ''); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.put('/api/sessions/:id/groups/:groupId/settings', requireTenantOwnership, async (req, res) => {
+    try { await groupSettings(req.params.id, req.params.groupId, req.body); res.json({ success: true }); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+router.get('/api/sessions/:id/groups/:groupId', requireTenantOwnership, async (req, res) => {
+    try { const meta = await getGroupMetadata(req.params.id, req.params.groupId); res.json(meta); }
+    catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Polls ───────────────────────────────────────────────────────────────
+router.post('/api/sessions/:id/messages/send-poll', requireTenantOwnership, async (req, res) => {
+    const { chatId, question, options, selectableCount } = req.body;
+    if (!chatId || !question || !options?.length) return res.status(400).json({ error: 'chatId, question, options required' });
+    try {
+        const result = await createPoll(req.params.id, chatId, question, options, selectableCount || 1);
+        res.json({ success: true, result });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// ── Labels ──────────────────────────────────────────────────────────────
+router.get('/api/sessions/:id/labels', requireTenantOwnership, (req, res) => {
+    res.json(db.prepare('SELECT * FROM chat_labels WHERE session_id = ? ORDER BY name').all(req.params.id));
+});
+
+router.post('/api/sessions/:id/labels', requireTenantOwnership, (req, res) => {
+    const { name, color } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    const id = crypto.randomUUID();
+    db.prepare('INSERT INTO chat_labels (id, session_id, name, color, created_at) VALUES (?, ?, ?, ?, ?)')
+        .run(id, req.params.id, name, color || '#6366f1', Date.now());
+    res.status(201).json({ success: true, id, name });
+});
+
+router.delete('/api/sessions/:id/labels/:labelId', requireTenantOwnership, (req, res) => {
+    db.prepare('DELETE FROM chat_label_mapping WHERE label_id = ? AND session_id = ?').run(req.params.labelId, req.params.id);
+    db.prepare('DELETE FROM chat_labels WHERE id = ? AND session_id = ?').run(req.params.labelId, req.params.id);
+    res.json({ success: true });
+});
+
+router.get('/api/sessions/:id/labels/:chatId', requireTenantOwnership, (req, res) => {
+    const labels = db.prepare(`
+        SELECT cl.* FROM chat_labels cl
+        JOIN chat_label_mapping clm ON cl.id = clm.label_id
+        WHERE clm.chat_id = ? AND clm.session_id = ?
+    `).all(req.params.chatId, req.params.id);
+    res.json(labels);
+});
+
+router.post('/api/sessions/:id/labels/:labelId/assign', requireTenantOwnership, (req, res) => {
+    const { chatId } = req.body;
+    if (!chatId) return res.status(400).json({ error: 'chatId required' });
+    const id = crypto.randomUUID();
+    try {
+        db.prepare('INSERT INTO chat_label_mapping (id, session_id, chat_id, label_id, created_at) VALUES (?, ?, ?, ?, ?)')
+            .run(id, req.params.id, chatId, req.params.labelId, Date.now());
+        res.json({ success: true });
+    } catch (e) {
+        res.status(409).json({ error: 'Already assigned' });
+    }
+});
+
+router.post('/api/sessions/:id/labels/:labelId/unassign', requireTenantOwnership, (req, res) => {
+    const { chatId } = req.body;
+    db.prepare('DELETE FROM chat_label_mapping WHERE label_id = ? AND chat_id = ? AND session_id = ?')
+        .run(req.params.labelId, chatId, req.params.id);
     res.json({ success: true });
 });
 
