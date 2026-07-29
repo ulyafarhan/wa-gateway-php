@@ -116,6 +116,15 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── MCP Server ──────────────────────────────────────────────────────────
+import { handleMcpRequest } from './src/mcp.js';
+app.post('/mcp', (req, res, next) => {
+  if (!handleMcpRequest(req, res)) next();
+});
+app.get('/mcp', (req, res, next) => {
+  if (!handleMcpRequest(req, res)) next();
+});
+
 // Error handler
 app.use(errorHandler);
 

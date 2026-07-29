@@ -62,6 +62,24 @@ const router = createRouter({
       meta: { requiresAuth: true, title: 'Users', roles: ['superadmin', 'admin'] },
     },
     {
+      path: '/tenants',
+      name: 'Tenants',
+      component: () => import('../views/Tenants/TenantsView.vue'),
+      meta: { requiresAuth: true, title: 'Tenants', roles: ['superadmin', 'admin'] },
+    },
+    {
+      path: '/inbox',
+      name: 'Inbox',
+      component: () => import('../views/Inbox/InboxView.vue'),
+      meta: { requiresAuth: true, title: 'Inbox', roles: ['superadmin', 'admin', 'operator'] },
+    },
+    {
+      path: '/inbox/:sessionId',
+      name: 'InboxSession',
+      component: () => import('../views/Inbox/InboxView.vue'),
+      meta: { requiresAuth: true, title: 'Inbox', roles: ['superadmin', 'admin', 'operator'] },
+    },
+    {
       path: '/broadcast',
       name: 'Broadcast',
       component: () => import('../views/Broadcast/BroadcastView.vue'),
