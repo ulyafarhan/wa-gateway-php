@@ -40,8 +40,11 @@
                 <p class="text-sm text-gray-500 dark:text-gray-400">
                   Masuk ke dashboard WaAceh
                 </p>
-              </div>
-              <div>
+                    </div>
+                    <div class="text-right">
+                      <router-link to="/forgot-password" class="text-sm text-brand-500 hover:underline">Lupa password?</router-link>
+                    </div>
+                    <div>
                 <form @submit.prevent="handleSubmit">
                   <div v-if="error" class="rounded-lg bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-500 mb-4">{{ error }}</div>
                   <div class="space-y-5">

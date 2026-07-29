@@ -4,8 +4,46 @@ import crypto from 'crypto';
 import { initAuthCreds } from '@whiskeysockets/baileys';
 import db from './db.js';
 
-// ponytail: minimal in-memory cache to avoid SQLite reads on every credential check
 const cache = new Map();
+
+const ENC_KEY = process.env.ENCRYPTION_KEY
+    ? Buffer.from(process.env.ENCRYPTION_KEY.trim(), 'hex')
+    : (() => {
+        const key = crypto.randomBytes(32).toString('hex');
+        console.warn('[auth-state] ENCRYPTION_KEY not set — generated random key. Persist this across restarts:', key);
+        return Buffer.from(key, 'hex');
+    })();
+
+function encrypt(text) {
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-gcm', ENC_KEY, iv);
+    let enc = cipher.update(text, 'utf8', 'hex');
+    enc += cipher.final('hex');
+    return { iv: iv.toString('hex'), tag: cipher.getAuthTag().toString('hex'), data: enc };
+}
+
+function decrypt(enc) {
+    const d = crypto.createDecipheriv('aes-256-gcm', ENC_KEY, Buffer.from(enc.iv, 'hex'));
+    d.setAuthTag(Buffer.from(enc.tag, 'hex'));
+    let text = d.update(enc.data, 'hex', 'utf8');
+    text += d.final('utf8');
+    return text;
+}
+
+function encryptJSON(obj) {
+    return JSON.stringify(encrypt(JSON.stringify(obj)));
+}
+
+function decryptJSON(str) {
+    if (!str) return null;
+    try {
+        const parsed = JSON.parse(str);
+        if (parsed && typeof parsed === 'object' && parsed.iv && parsed.tag && parsed.data !== undefined) {
+            return JSON.parse(decrypt(parsed), (k, v) => v?.type === 'Buffer' && Array.isArray(v?.data) ? Buffer.from(v.data) : v);
+        }
+        return JSON.parse(str, (k, v) => v?.type === 'Buffer' && Array.isArray(v?.data) ? Buffer.from(v.data) : v);
+    } catch { return null; }
+}
 
 export function useSQLiteAuthState(sessionId) {
     if (!cache.has(sessionId)) {
@@ -17,15 +55,14 @@ export function useSQLiteAuthState(sessionId) {
 function loadFromDB(sessionId) {
     const row = db.prepareGetAuthState.get(sessionId);
     if (!row) {
-        // New session — create initial auth creds and persist
         const fresh = initAuthCreds();
-        db.prepareUpsertAuthState.run(sessionId, JSON.stringify(fresh), JSON.stringify({}), Date.now());
+        db.prepareUpsertAuthState.run(sessionId, encryptJSON(fresh), encryptJSON({}), Date.now());
         return cache.set(sessionId, { creds: fresh, keys: {} });
     }
 
     const state = {
-        creds: tryParse(row.creds_data),
-        keys: tryParse(row.keys_data),
+        creds: decryptJSON(row.creds_data),
+        keys: decryptJSON(row.keys_data),
     };
     cache.set(sessionId, state);
 }
@@ -38,8 +75,8 @@ export function saveAuthCreds(sessionId, creds) {
 
     db.prepareUpsertAuthState.run(
         sessionId,
-        JSON.stringify(entry.creds),
-        JSON.stringify(entry.keys || {}),
+        encryptJSON(entry.creds),
+        encryptJSON(entry.keys || {}),
         Date.now()
     );
 }
@@ -51,8 +88,8 @@ export function saveAuthKeys(sessionId, keys) {
 
     db.prepareUpsertAuthState.run(
         sessionId,
-        JSON.stringify(entry.creds || {}),
-        JSON.stringify(keys),
+        encryptJSON(entry.creds || {}),
+        encryptJSON(keys),
         Date.now()
     );
 }
@@ -104,14 +141,13 @@ function makeKeyStore(sessionId, data) {
                 if (!data[type]) data[type] = {};
                 Object.assign(data[type], items);
             }
-            // Persist to DB
             const entry = cache.get(sessionId);
             if (entry) {
                 entry.keys = data;
                 db.prepareUpsertAuthState.run(
                     sessionId,
-                    JSON.stringify(entry.creds || {}),
-                    JSON.stringify(data),
+                    encryptJSON(entry.creds || {}),
+                    encryptJSON(data),
                     Date.now()
                 );
             }

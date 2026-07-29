@@ -263,6 +263,14 @@ if (existingPackages === 0) {
     if (tenants.length) console.log(`[db] Default packages created for ${tenants.length} tenants`);
 }
 
+// ── Migration: reset_token for forgot-password ───────────────────────────
+const userCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+if (!userCols.includes('reset_token')) {
+    db.exec("ALTER TABLE users ADD COLUMN reset_token TEXT");
+    db.exec("ALTER TABLE users ADD COLUMN reset_token_expires INTEGER");
+    console.log('[db] Migration: added reset_token to users');
+}
+
 // ── Prepared: messages ──────────────────────────────────────────────────
 db.prepareInsertMessage = db.prepare(`INSERT OR REPLACE INTO messages (id, session_id, chat_id, type, payload, status, created_at) VALUES (?, ?, ?, ?, ?, 'queued', ?)`);
 db.prepareInsertReceived = db.prepare(`INSERT OR REPLACE INTO messages (id, session_id, chat_id, type, payload, status, created_at) VALUES (?, ?, ?, ?, ?, 'received', ?)`);

@@ -21,7 +21,7 @@ import { startSync, stopSync } from './src/sync.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = parseInt(process.env.PORT || '2785', 10);
-const logger = pino({ level: process.env.LOG_LEVEL || 'silent' });
+const logger = pino({ level: process.env.LOG_LEVEL || 'silent', redact: ['req.headers.authorization', 'req.headers.cookie', 'body.password', 'body.api_key', 'body.token'] });
 
 // Seed admin user
 if (process.env.SEED_ADMIN_USER && process.env.SEED_ADMIN_PASS) {
@@ -111,6 +111,13 @@ startSync();
 
 // GC periodik — 414MB VPS
 if (global.gc) setInterval(() => global.gc(), 300000);
+
+// TTL — auto-purge messages > 30 days
+setInterval(() => {
+    const cutoff = Date.now() - 30 * 86400000;
+    db.prepare('DELETE FROM messages WHERE created_at < ?').run(cutoff);
+    db.prepare('DELETE FROM behavior_outbox WHERE created_at < ?').run(cutoff);
+}, 3600000);
 
 app.listen(PORT, process.env.HOST || '0.0.0.0', () => {
     logger.info(`WhatsApp Gateway v5 running on http://localhost:${PORT}`);

@@ -36,7 +36,11 @@ export function enqueueWebhook(sessionId, event, payload) {
 export async function deliver(id, wh, data, sessionId) {
     try {
         const headers = { 'Content-Type': 'application/json' };
-        if (wh.secret) headers['X-Webhook-Secret'] = wh.secret;
+        if (wh.secret) {
+            headers['X-Webhook-Secret'] = wh.secret;
+            const hmac = crypto.createHmac('sha256', wh.secret).update(data).digest('hex');
+            headers['X-Webhook-Signature'] = `sha256=${hmac}`;
+        }
 
         const res = await fetch(wh.url, {
             method: 'POST',

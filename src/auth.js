@@ -15,7 +15,7 @@ const REFRESH_EXPIRY = '7d';
 const permissionCache = new Map();
 
 export function hashPassword(password) {
-    return bcrypt.hashSync(password, 10);
+    return bcrypt.hashSync(password, 12);
 }
 
 export function verifyPassword(password, hash) {

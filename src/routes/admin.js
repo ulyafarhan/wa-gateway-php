@@ -1,7 +1,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import db from '../db.js';
-import { requireApiAuth, requireRole, generateToken, verifyToken, verifyPassword, createUser, getUserByUsername, getUserById } from '../auth.js';
+import { requireApiAuth, requireRole, generateToken, verifyToken, verifyPassword, hashPassword, createUser, getUserByUsername, getUserById } from '../auth.js';
 
 const router = express.Router();
 
@@ -35,7 +35,7 @@ router.post('/api/auth/login', rateLimitLogin, (req, res) => {
     const accessToken = generateToken(user, '15m');
     const refreshToken = generateToken(user, '7d');
     const secure = process.env.NODE_ENV === 'production';
-    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: 'lax', secure, maxAge: 7 * 86400000, path: '/api/auth' });
+    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: 'strict', secure, maxAge: 7 * 86400000, path: '/api/auth' });
     logAudit(user.id, 'login', 'auth', { method: 'password' }, req.ip);
     res.json({ access_token: accessToken, user: { id: user.id, username: user.username, email: user.email, role: user.role } });
 });
@@ -60,8 +60,20 @@ router.post('/api/auth/logout', (req, res) => {
     res.json({ success: true });
 });
 
-// ponytail: public register — creates client-role user, no auth required
+// ponytail: public register — rate limited, creates client-role user
+const registerAttempts = new Map();
 router.post('/api/auth/register', (req, res) => {
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = registerAttempts.get(ip);
+    if (entry && now - entry.start < 3600000 && entry.count >= 3) {
+        return res.status(429).json({ error: 'Too many registrations from this IP. Try again in an hour.' });
+    }
+    if (!entry || now - entry.start >= 3600000) {
+        registerAttempts.set(ip, { start: now, count: 1 });
+    } else {
+        entry.count++;
+    }
     const { username, email, password } = req.body;
     if (!username || !email || !password) return res.status(400).json({ error: 'username, email, password required' });
     if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
@@ -71,6 +83,28 @@ router.post('/api/auth/register', (req, res) => {
     } catch (e) {
         res.status(409).json({ error: 'Username or email already exists' });
     }
+});
+
+// ponytail: forgot-password — always return success to prevent email enumeration
+router.post('/api/auth/forgot-password', (req, res) => {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: 'Email required' });
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (user) {
+        const token = crypto.randomUUID();
+        db.prepare('UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?').run(token, Date.now() + 3600000, user.id);
+    }
+    res.json({ success: true });
+});
+
+router.post('/api/auth/reset-password', (req, res) => {
+    const { token, password } = req.body;
+    if (!token || !password) return res.status(400).json({ error: 'Token and password required' });
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    const user = db.prepare('SELECT * FROM users WHERE reset_token = ? AND reset_token_expires > ?').get(token, Date.now());
+    if (!user) return res.status(400).json({ error: 'Invalid or expired token' });
+    db.prepare('UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?').run(hashPassword(password), user.id);
+    res.json({ success: true });
 });
 
 router.post('/api/auth/register-admin', requireApiAuth, requireRole('superadmin'), (req, res) => {

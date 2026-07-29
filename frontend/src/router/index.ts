@@ -26,6 +26,18 @@ const router = createRouter({
       meta: { title: 'Register', layout: 'fullscreen', guest: true },
     },
     {
+      path: '/forgot-password',
+      name: 'forgotPassword',
+      component: () => import('../views/Auth/ForgotPassword.vue'),
+      meta: { title: 'Forgot Password', layout: 'fullscreen', guest: true },
+    },
+    {
+      path: '/reset-password',
+      name: 'resetPassword',
+      component: () => import('../views/Auth/ResetPassword.vue'),
+      meta: { title: 'Reset Password', layout: 'fullscreen', guest: true },
+    },
+    {
       path: '/dashboard',
       name: 'Dashboard',
       component: () => import('../views/Ecommerce.vue'),
