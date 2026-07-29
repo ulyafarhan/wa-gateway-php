@@ -15,7 +15,7 @@
             <li><a href="#features" class="hover:text-blue-600 transition">Fitur</a></li>
             <li><a href="#pricing" class="hover:text-blue-600 transition">Harga</a></li>
             <li><router-link to="/login" class="hover:text-blue-600 transition">Dashboard</router-link></li>
-            <li><a href="/api/health" class="hover:text-blue-600 transition">Health</a></li>
+            <li><a href="https://waaceh.biz.id/api/health" class="hover:text-blue-600 transition">Health</a></li>
           </ul>
         </div>
         <div>

@@ -66,7 +66,7 @@ app.use((_req, res, next) => {
 });
 
 // ponytail: CORS
-const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || 'https://wa.gampong.web.id,http://localhost:2785,http://localhost:5173').split(',');
+const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || 'https://wa.gampong.web.id,https://waaceh.biz.id,http://localhost:2785,http://localhost:5173').split(',');
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 
 // Static files — Vue SPA build (base: /admin/)
