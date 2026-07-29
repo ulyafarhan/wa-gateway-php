@@ -69,12 +69,10 @@ app.use((_req, res, next) => {
 const ALLOWED_ORIGINS = (process.env.CORS_ORIGINS || 'https://wa.gampong.web.id,https://waaceh.biz.id,http://localhost:2785,http://localhost:5173').split(',');
 app.use(cors({ origin: ALLOWED_ORIGINS, credentials: true }));
 
-// Static files — Vue SPA build (base: /admin/)
+// Static files — Vue SPA build
 const frontendDist = path.join(__dirname, 'frontend', 'dist');
-app.use('/admin/assets', express.static(path.join(frontendDist, 'assets'), { maxAge: '7d', immutable: true }));
-app.get('/admin/favicon.ico', (_, r) => r.sendFile(path.join(frontendDist, 'favicon.ico')));
-
-// ponytail: SPA handles / via Vue router — no more static HTML landing
+app.use('/assets', express.static(path.join(frontendDist, 'assets'), { maxAge: '7d', immutable: true }));
+app.get('/favicon.ico', (_, r) => r.sendFile(path.join(frontendDist, 'favicon.ico')));
 
 // ── Swagger UI ──────────────────────────────────────────────────────────
 const swaggerHtml = `<!doctype html>
@@ -91,14 +89,13 @@ const swaggerHtml = `<!doctype html>
 app.get('/api/docs', (req, res) => res.type('text/html').send(swaggerHtml));
 app.get('/api/docs/openapi.json', (req, res) => res.sendFile(path.join(__dirname, 'docs', 'openapi.json')));
 
-// Admin SPA — catch-all for /admin/* routes
+// SPA index
 const indexHtml = fs.readFileSync(path.join(frontendDist, 'index.html'), 'utf-8');
-app.use('/admin', (req, res) => {
-  if (req.method === 'GET') {
-    res.set('Content-Type', 'text/html; charset=utf-8').send(indexHtml);
-  } else {
-    res.status(404).json({ error: 'Not found' });
-  }
+
+// Redirect /admin/* to root (SPA sekarang di /)
+app.get(/^\/admin/, (req, res) => {
+  const path = req.path.replace('/admin', '') || '/';
+  res.redirect(301, path);
 });
 
 // API routes
