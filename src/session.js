@@ -232,6 +232,32 @@ async function processQueue(sessionId) {
                     fileName: msg.fileName || 'file',
                     mimetype: msg.mimetype || 'application/pdf',
                 });
+            } else if (msg.type === 'buttons') {
+                result = await session.sock.sendMessage(jid, {
+                    text: msg.text,
+                    footer: msg.footer,
+                    buttons: msg.buttons.map((b, i) => ({
+                        buttonId: b.id || `btn_${i}`,
+                        buttonText: { displayText: b.text },
+                        type: 1
+                    })),
+                    headerType: 1
+                });
+            } else if (msg.type === 'list') {
+                result = await session.sock.sendMessage(jid, {
+                    text: msg.text,
+                    footer: msg.footer,
+                    title: msg.title,
+                    buttonText: msg.buttonText || 'Pilih',
+                    sections: (msg.sections || []).map(s => ({
+                        title: s.title,
+                        rows: (s.rows || []).map(r => ({
+                            title: r.title,
+                            description: r.description,
+                            rowId: r.id
+                        }))
+                    }))
+                });
             } else {
                 result = await session.sock.sendMessage(jid, { text: msg.text });
             }
@@ -254,13 +280,13 @@ async function processQueue(sessionId) {
     session.processing = false;
 }
 
-export function enqueueMessage(sessionId, { chatId, type, text, imageUrl, caption, priority }) {
+export function enqueueMessage(sessionId, { chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText, priority }) {
     const session = getOrCreateSession(sessionId);
     const messageId = crypto.randomUUID();
-    const payload = JSON.stringify({ chatId, type, text, imageUrl, caption });
+    const payload = JSON.stringify({ chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText });
 
     db.prepareInsertMessage.run(messageId, sessionId, chatId, type, payload, Date.now());
-    session.queue.push({ chatId, type, text, imageUrl, caption, messageId, priority: priority || 'normal' });
+    session.queue.push({ chatId, type, text, imageUrl, caption, footer, buttons, sections, title, buttonText, messageId, priority: priority || 'normal' });
 
     if (session.status === 'connected' && !session.processing) {
         processQueue(sessionId);

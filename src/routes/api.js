@@ -169,10 +169,10 @@ router.delete('/api/sessions/:id', requireTenantOwnership, (req, res) => {
 
 // ── Messages ────────────────────────────────────────────────────────────
 router.post('/api/sessions/:id/messages', requireTenantOwnership, (req, res) => {
-    const { type, chatId, text, imageUrl, caption, priority } = req.body;
+    const { type, chatId, text, imageUrl, caption, footer, buttons, sections, title, buttonText, priority } = req.body;
     if (!chatId) return res.status(400).json({ error: 'chatId required' });
-    if (type && !['text', 'image', 'audio', 'document'].includes(type)) return res.status(400).json({ error: 'Invalid type' });
-    const messageId = enqueueMessage(req.params.id, { type: type || 'text', chatId, text, imageUrl, caption, priority: priority || 'normal' });
+    if (type && !['text', 'image', 'audio', 'document', 'buttons', 'list'].includes(type)) return res.status(400).json({ error: 'Invalid type' });
+    const messageId = enqueueMessage(req.params.id, { type: type || 'text', chatId, text, imageUrl, caption, footer, buttons, sections, title, buttonText, priority: priority || 'normal' });
     res.json({ success: true, message_id: messageId, queued: true });
 });
 
@@ -186,6 +186,18 @@ router.post('/api/sessions/:id/messages/send-image', requireTenantOwnership, (re
     const { chatId, imageUrl, caption } = req.body;
     if (!chatId || !imageUrl) return res.status(400).json({ error: 'chatId and imageUrl required' });
     res.json({ success: true, message_id: enqueueMessage(req.params.id, { type: 'image', chatId, imageUrl, caption }) });
+});
+
+router.post('/api/sessions/:id/messages/send-buttons', requireTenantOwnership, (req, res) => {
+    const { chatId, text, footer, buttons } = req.body;
+    if (!chatId || !text || !buttons?.length) return res.status(400).json({ error: 'chatId, text, and buttons required' });
+    res.json({ success: true, message_id: enqueueMessage(req.params.id, { type: 'buttons', chatId, text, footer, buttons }) });
+});
+
+router.post('/api/sessions/:id/messages/send-list', requireTenantOwnership, (req, res) => {
+    const { chatId, text, footer, title, buttonText, sections } = req.body;
+    if (!chatId || !text || !sections?.length) return res.status(400).json({ error: 'chatId, text, and sections required' });
+    res.json({ success: true, message_id: enqueueMessage(req.params.id, { type: 'list', chatId, text, footer, title, buttonText, sections }) });
 });
 
 // ── Broadcast (P3: priority + schedule) ─────────────────────────────────
@@ -419,6 +431,42 @@ router.post('/api/sync/templates', async (req, res) => {
     } catch (e) {
         res.status(502).json({ error: 'Sync failed', details: e.message });
     }
+});
+
+// ── Contact Groups ──────────────────────────────────────────────────────
+router.get('/api/sessions/:id/groups', requireTenantOwnership, (req, res) => {
+    res.json(db.prepare('SELECT * FROM contact_groups WHERE session_id = ? ORDER BY name').all(req.params.id));
+});
+
+router.post('/api/sessions/:id/groups', requireTenantOwnership, (req, res) => {
+    const { name, color } = req.body;
+    if (!name) return res.status(400).json({ error: 'name required' });
+    const id = crypto.randomUUID();
+    db.prepare('INSERT INTO contact_groups (id, session_id, name, color, created_at) VALUES (?, ?, ?, ?, ?)')
+        .run(id, req.params.id, name, color || '#6366f1', Date.now());
+    res.status(201).json({ success: true, id, name });
+});
+
+router.put('/api/sessions/:id/groups/:groupId', requireTenantOwnership, (req, res) => {
+    const { name, color } = req.body;
+    db.prepare('UPDATE contact_groups SET name = COALESCE(?, name), color = COALESCE(?, color) WHERE id = ? AND session_id = ?')
+        .run(name || null, color || null, req.params.groupId, req.params.id);
+    res.json({ success: true });
+});
+
+router.delete('/api/sessions/:id/groups/:groupId', requireTenantOwnership, (req, res) => {
+    db.prepare('DELETE FROM contact_groups WHERE id = ? AND session_id = ?').run(req.params.groupId, req.params.id);
+    db.prepare('UPDATE user_profiles SET group_id = NULL WHERE group_id = ? AND session_id = ?').run(req.params.groupId, req.params.id);
+    res.json({ success: true });
+});
+
+// Assign contact to group
+router.put('/api/sessions/:id/users/:userId/group', requireTenantOwnership, (req, res) => {
+    const { group_id } = req.body;
+    const now = Date.now();
+    db.prepare('UPDATE user_profiles SET group_id = ?, updated_at = ? WHERE user_id = ? AND session_id = ?')
+        .run(group_id || null, now, req.params.userId, req.params.id);
+    res.json({ success: true });
 });
 
 function tryParse(str) { if (!str) return null; try { return JSON.parse(str); } catch { return str; } }

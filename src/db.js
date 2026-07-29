@@ -165,6 +165,12 @@ db.exec(`
         is_system INTEGER DEFAULT 0, created_at INTEGER, updated_at INTEGER
     );
 
+    CREATE TABLE IF NOT EXISTS contact_groups (
+        id TEXT PRIMARY KEY, session_id TEXT NOT NULL,
+        name TEXT NOT NULL, color TEXT DEFAULT '#6366f1',
+        created_at INTEGER
+    );
+
     CREATE TABLE IF NOT EXISTS tenant_packages (
         id TEXT PRIMARY KEY, tenant_id TEXT NOT NULL,
         package_name TEXT NOT NULL DEFAULT 'starter',
@@ -238,6 +244,13 @@ db.exec("CREATE INDEX IF NOT EXISTS idx_broadcast_assignments_broadcast ON broad
 db.exec("CREATE INDEX IF NOT EXISTS idx_dead_letter_session ON webhook_dead_letter(session_id)");
 db.exec("CREATE INDEX IF NOT EXISTS idx_roles_name ON roles(name)");
 db.exec("CREATE INDEX IF NOT EXISTS idx_tenant_packages_tenant ON tenant_packages(tenant_id)");
+
+// ── Migration: contact_groups ──────────────────────────────────────────
+const upColumns = db.prepare("PRAGMA table_info(user_profiles)").all().map(c => c.name);
+if (!upColumns.includes('group_id')) {
+    db.exec("ALTER TABLE user_profiles ADD COLUMN group_id TEXT REFERENCES contact_groups(id)");
+    console.log('[db] Migration: added group_id to user_profiles');
+}
 
 // ── Seed default roles ──────────────────────────────────────────────────
 const existingRoles = db.prepare('SELECT COUNT(*) as c FROM roles').get().c;
