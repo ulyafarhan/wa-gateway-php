@@ -125,9 +125,8 @@ describe('sim (Levenshtein normalized)', () => {
     assert.equal(sim('abc', ''), 0);
   });
 
-  it('dua string kosong return NaN (division by zero)', () => {
-    // Bug: Math.max(0,0) = 0 → 1 - 0/0 = NaN
-    assert.ok(Number.isNaN(sim('', '')));
+  it('dua string kosong return 1 (identical)', () => {
+    assert.equal(sim('', ''), 1);
   });
 
   it('similaritas dengan string panjang', () => {

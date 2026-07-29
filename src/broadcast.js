@@ -14,15 +14,15 @@ export function enqueueBroadcast(sessionId, tenantId, targets, text, priority = 
     const broadcastId = crypto.randomUUID();
     const totalTargets = targets.length;
 
-    // If scheduled, store with schedule_at timestamp
+    const now = Date.now();
     if (scheduleAt) {
         db.prepare(`INSERT INTO broadcast_jobs (id, tenant_id, total_targets, message, status, created_at) VALUES (?, ?, ?, ?, 'scheduled', ?)`)
-            .run(broadcastId, tenantId, totalTargets, text || '', new Date(scheduleAt).getTime());
+            .run(broadcastId, tenantId, totalTargets, text || '', now);
+        db.prepare(`UPDATE broadcast_jobs SET schedule_at = ? WHERE id = ?`).run(new Date(scheduleAt).getTime(), broadcastId);
     } else {
-        db.prepareInsertBroadcastJob.run(broadcastId, tenantId, totalTargets, text || '', Date.now());
+        db.prepareInsertBroadcastJob.run(broadcastId, tenantId, totalTargets, text || '', now);
     }
 
-    // Assign all targets to this session
     db.prepareInsertBroadcastAssignment.run(
         crypto.randomUUID(), broadcastId, sessionId, JSON.stringify(targets)
     );
@@ -37,10 +37,10 @@ export function enqueueBroadcast(sessionId, tenantId, targets, text, priority = 
     };
 }
 
-// Process scheduled broadcasts (call from cron or interval)
 export function processScheduledBroadcasts() {
     const now = Date.now();
-    const scheduled = db.prepare(`UPDATE broadcast_jobs SET status = 'queued' WHERE status = 'scheduled' AND created_at <= ?`).run(now);
+    const scheduled = db.prepare(`UPDATE broadcast_jobs SET status = 'queued' WHERE status = 'scheduled' AND schedule_at <= ?`).run(now);
+    if (scheduled.changes) db.prepare(`UPDATE broadcast_jobs SET status = 'queued' WHERE status = 'scheduled' AND schedule_at IS NULL AND created_at <= ?`).run(now);
     return scheduled.changes;
 }
 
@@ -57,10 +57,10 @@ export function startBroadcastProcessor() {
             const assignments = db.prepareGetBroadcastAssignments.all(job.id);
             for (const assignment of assignments) {
                 if (assignment.status === 'completed') continue;
-                const targets = JSON.parse(assignment.targets || '[]');
-                // Process up to 10 targets per tick
-                const batch = targets.splice(0, 10);
-                assignment.targets = JSON.stringify(targets);
+                const allTargets = JSON.parse(assignment.targets || '[]');
+                const offset = assignment.offset || 0;
+                const batch = allTargets.slice(offset, offset + 10);
+                if (!batch.length) { db.prepareUpdateBroadcastProgress.run(0, 0, 'completed', assignment.id); continue; }
 
                 const msg = job.message || '';
                 let sent = 0, failed = 0;
@@ -77,7 +77,10 @@ export function startBroadcastProcessor() {
                     }
                 }
 
-                db.prepareUpdateBroadcastProgress.run(sent, failed, targets.length === 0 ? 'completed' : 'running', assignment.id);
+                const newOffset = offset + batch.length;
+                const done = newOffset >= allTargets.length;
+                db.prepare(`UPDATE broadcast_assignments SET offset = ?, sent = sent + ?, failed = failed + ?, status = ? WHERE id = ?`)
+                    .run(newOffset, sent, failed, done ? 'completed' : 'running', assignment.id);
                 db.prepareUpdateBroadcastJob.run(sent, failed, 'running', null, job.id);
             }
 

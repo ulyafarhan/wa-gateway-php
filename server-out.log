@@ -1,0 +1,3 @@
+{"level":30,"time":1784801248262,"pid":5220,"hostname":"DESKTOP-CKUH365","msg":"WhatsApp Gateway v5 running on http://localhost:2785"}
+[API] GET /health
+[API] POST /auth/login

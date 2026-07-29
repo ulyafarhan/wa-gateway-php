@@ -3,37 +3,382 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WaAceh — WhatsApp Gateway Indonesia</title>
+<title>WaAceh — WhatsApp Gateway Indonesia | Multi-Session, AI Chatbot, Anti-Ban</title>
+<meta name="description" content="WhatsApp Gateway untuk Aceh dan Indonesia. Multi-session, anti-ban engine, AI chatbot, SDK PHP & Node.js. Dikelola dari Aceh.">
 <script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { heading: ['Poppins', 'sans-serif'], body: ['Open Sans', 'sans-serif'] },
+      colors: { navy: { 50: '#f0f4f8', 100: '#d9e2ec', 200: '#bcccdc', 300: '#9fb3c8', 400: '#829ab1', 500: '#627d98', 600: '#486581', 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' } }
+    }
+  }
+}
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Open Sans', sans-serif; background: #f8fafc; color: #1e293b; }
+h1, h2, h3, h4, h5, h6 { font-family: 'Poppins', sans-serif; }
+.glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.3); }
+.glass-card { background: rgba(255,255,255,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); transition: all 0.3s ease; }
+.glass-card:hover { background: rgba(255,255,255,0.8); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(15,23,42,0.08); }
+.btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; transition: all 0.25s ease; cursor: pointer; text-decoration: none; background: #0369a1; color: white; border: none; }
+.btn-primary:hover { background: #0284c7; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(3,105,161,0.3); }
+.btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; transition: all 0.25s ease; cursor: pointer; text-decoration: none; background: transparent; color: #334155; border: 1.5px solid #e2e8f0; }
+.btn-secondary:hover { border-color: #0369a1; color: #0369a1; transform: translateY(-2px); }
+.btn-ghost { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem; transition: all 0.2s ease; cursor: pointer; text-decoration: none; color: #64748b; }
+.btn-ghost:hover { color: #0369a1; background: rgba(3,105,161,0.06); }
+.section { padding: 5rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+.section-title { font-size: 2.25rem; font-weight: 700; text-align: center; margin-bottom: 0.75rem; color: #0f172a; }
+.section-sub { font-size: 1.1rem; color: #64748b; text-align: center; max-width: 600px; margin: 0 auto 3.5rem; line-height: 1.7; }
+.fade-in { opacity: 0; transform: translateY(24px); animation: fadeIn 0.7s ease forwards; }
+.fade-in-d1 { animation-delay: 0.1s; }
+.fade-in-d2 { animation-delay: 0.2s; }
+.fade-in-d3 { animation-delay: 0.3s; }
+.fade-in-d4 { animation-delay: 0.4s; }
+@keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+.pricing-card { border-radius: 1.25rem; padding: 2.5rem 2rem; transition: all 0.3s ease; position: relative; background: white; border: 1px solid #e2e8f0; }
+.pricing-card:hover { transform: translateY(-6px); box-shadow: 0 24px 60px rgba(15,23,42,0.1); }
+.pricing-card.popular { border: 2px solid #0369a1; box-shadow: 0 8px 32px rgba(3,105,161,0.15); }
+.pricing-card.popular::before { content: 'POPULER'; position: absolute; top: -0.75rem; left: 50%; transform: translateX(-50%); background: #0369a1; color: white; font-size: 0.7rem; font-weight: 700; padding: 0.25rem 1rem; border-radius: 999px; letter-spacing: 0.05em; }
+.pricing-card.dark { background: #0f172a; border-color: #1e293b; }
+.pricing-card.dark .price-amount, .pricing-card.dark h3 { color: white; }
+.pricing-card.dark .price-desc { color: #94a3b8; }
+.pricing-card.dark li { color: #cbd5e1; }
+.pricing-card.dark li svg { color: #22c55e; }
+.price-amount { font-family: 'Poppins', sans-serif; font-size: 2.75rem; font-weight: 700; color: #0f172a; }
+.price-period { font-size: 0.9rem; color: #94a3b8; font-weight: 400; }
+.feature-check { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.4rem 0; font-size: 0.9rem; color: #475569; }
+.feature-check svg { flex-shrink: 0; margin-top: 0.2rem; }
+@media (max-width: 768px) {
+  .section { padding: 3rem 1rem; }
+  .section-title { font-size: 1.75rem; }
+  .pricing-card { padding: 1.75rem 1.25rem; }
+}
+</style>
 </head>
-<body class="bg-gray-950 text-white">
-<nav class="flex items-center justify-between px-8 py-4 max-w-6xl mx-auto">
-  <span class="text-xl font-bold text-emerald-400">WaAceh</span>
-  <a href="/admin/login" class="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-medium hover:bg-emerald-400 text-white">Login</a>
+<body>
+
+<!-- Nav -->
+<nav class="fixed top-0 left-0 right-0 z-50 glass">
+  <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2.5 text-lg font-bold text-navy-900 no-underline">
+      <svg class="w-8 h-8" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0369a1" fill-opacity="0.15"/><path d="M16 6c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6z" fill="#0369a1"/><path d="M16 10c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z" fill="white"/></svg>
+      WaAceh
+    </a>
+    <div class="hidden md:flex items-center gap-1">
+      <a href="#features" class="btn-ghost">Fitur</a>
+      <a href="#pricing" class="btn-ghost">Harga</a>
+      <a href="#how" class="btn-ghost">Cara Kerja</a>
+      <a href="#faq" class="btn-ghost">FAQ</a>
+      <a href="/admin/login" class="btn-ghost">Dashboard</a>
+    </div>
+    <div class="flex items-center gap-3">
+      <a href="/admin/login" class="btn-ghost hidden sm:inline-flex">Masuk</a>
+      <a href="/admin/register" class="btn-primary text-sm py-2 px-4">Daftar Gratis</a>
+    </div>
+  </div>
 </nav>
-<main class="max-w-4xl mx-auto px-8 pt-20 text-center">
-  <h1 class="text-5xl font-bold mb-6">WA Geutanyoe <span class="text-emerald-400">Aneuk Nanggroe</span></h1>
-  <p class="text-lg text-gray-400 mb-8 max-w-2xl mx-auto">WhatsApp Gateway untuk Aceh. Multi-session, anti-ban, AI chatbot, dan SDK lengkap. Dikelola dari Aceh, untuk Indonesia.</p>
-  <div class="flex gap-4 justify-center mb-16">
-    <a href="/admin/login" class="rounded-lg bg-emerald-500 px-6 py-3 font-medium hover:bg-emerald-400">Dashboard</a>
-    <a href="/admin/register" class="rounded-lg border border-emerald-500 px-6 py-3 font-medium hover:bg-emerald-500/20">Daftar</a>
-    <a href="https://waaceh.github.io" class="rounded-lg border border-gray-600 px-6 py-3 font-medium hover:bg-gray-800">Dokumentasi</a>
+
+<!-- Hero -->
+<section class="min-h-[90vh] flex items-center pt-24 relative overflow-hidden">
+  <div class="absolute inset-0 pointer-events-none" style="background: radial-gradient(ellipse 600px 400px at 20% 30%, rgba(3,105,161,0.06), transparent), radial-gradient(ellipse 500px 300px at 80% 60%, rgba(15,23,42,0.04), transparent);"></div>
+  <div class="section text-center relative">
+    <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-navy-50 border border-navy-100 text-sm text-navy-600 font-medium mb-8 fade-in">Dari Aceh, untuk Indonesia</div>
+    <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight mb-6 fade-in fade-in-d1" style="color:#0f172a;">
+      WA <span style="color:#0369a1;">Geutanyoe</span><br>Aneuk Nanggroe
+    </h1>
+    <p class="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed fade-in fade-in-d2">
+      WhatsApp Gateway untuk bisnis dan developer. Multi-session, anti-ban engine, AI chatbot, 
+      SDK lengkap — dikelola dari Aceh, untuk seluruh Indonesia.
+    </p>
+    <div class="flex flex-wrap gap-4 justify-center fade-in fade-in-d3">
+      <a href="/admin/register" class="btn-primary px-8 py-3.5 text-base">Mulai Gratis <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+      <a href="/admin/login" class="btn-secondary px-8 py-3.5 text-base">Lihat Dashboard</a>
+    </div>
+    <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto fade-in fade-in-d4">
+      <div class="glass-card rounded-xl p-5 text-center"><div class="text-3xl font-bold" style="color:#0369a1;">2+</div><div class="text-sm text-slate-500 mt-1">Session Aktif</div></div>
+      <div class="glass-card rounded-xl p-5 text-center"><div class="text-3xl font-bold" style="color:#0369a1;">99.9%</div><div class="text-sm text-slate-500 mt-1">Uptime</div></div>
+      <div class="glass-card rounded-xl p-5 text-center"><div class="text-3xl font-bold" style="color:#0369a1;">3</div><div class="text-sm text-slate-500 mt-1">Tier Harga</div></div>
+      <div class="glass-card rounded-xl p-5 text-center"><div class="text-3xl font-bold" style="color:#0369a1;">SDK</div><div class="text-sm text-slate-500 mt-1">PHP + Node.js</div></div>
+    </div>
   </div>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-    <div class="rounded-xl bg-gray-900 p-6 border border-gray-800">
-      <h3 class="font-semibold text-emerald-400 mb-2">Multi-Session</h3>
-      <p class="text-sm text-gray-400">Kelola banyak nomor WhatsApp dalam satu panel. Gampang, cepat, terpusat.</p>
+</section>
+
+<!-- Features -->
+<section id="features" class="section">
+  <h2 class="section-title">Kenapa WaAceh?</h2>
+  <p class="section-sub">Dibangun khusus untuk kebutuhan WhatsApp Gateway di Indonesia dengan teknologi anti-ban terkini.</p>
+  <div class="grid md:grid-cols-3 gap-6">
+    <div class="glass-card rounded-2xl p-8">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style="background:rgba(3,105,161,0.1);">
+        <svg class="w-6 h-6" style="color:#0369a1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      </div>
+      <h3 class="text-xl font-semibold mb-3" style="color:#0f172a;">Multi-Session</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Kelola banyak nomor WhatsApp dalam satu panel. Gampang, cepat, terpusat. Cocok untuk tim CS, marketing, dan operasional.</p>
     </div>
-    <div class="rounded-xl bg-gray-900 p-6 border border-gray-800">
-      <h3 class="font-semibold text-emerald-400 mb-2">AI Chatbot</h3>
-      <p class="text-sm text-gray-400">Balas otomatis pake AI. Dukung OpenAI, Anthropic, Bedrock, dan lokal LLM.</p>
+    <div class="glass-card rounded-2xl p-8">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style="background:rgba(3,105,161,0.1);">
+        <svg class="w-6 h-6" style="color:#0369a1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg>
+      </div>
+      <h3 class="text-xl font-semibold mb-3" style="color:#0f172a;">AI Chatbot</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Balas otomatis dengan AI. Dukung OpenAI, Anthropic, Bedrock. Deteksi intent dan persona user secara real-time.</p>
     </div>
-    <div class="rounded-xl bg-gray-900 p-6 border border-gray-800">
-      <h3 class="font-semibold text-emerald-400 mb-2">SDK Lengkap</h3>
-      <p class="text-sm text-gray-400">PHP (Laravel) & Node.js SDK. Integrasi semudah install composer/npm.</p>
+    <div class="glass-card rounded-2xl p-8">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style="background:rgba(3,105,161,0.1);">
+        <svg class="w-6 h-6" style="color:#0369a1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+      </div>
+      <h3 class="text-xl font-semibold mb-3" style="color:#0f172a;">SDK Lengkap</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Integrasi semudah install package. Tersedia untuk PHP (Composer) dan Node.js (npm). REST API dengan auth API key atau JWT.</p>
+    </div>
+    <div class="glass-card rounded-2xl p-8">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style="background:rgba(3,105,161,0.1);">
+        <svg class="w-6 h-6" style="color:#0369a1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+      </div>
+      <h3 class="text-xl font-semibold mb-3" style="color:#0f172a;">Anti-Ban Engine</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Behavior pipeline 11 tahap: timing humanis, volume control, quiet hours, diversity check, burst protection. Nomor bertahan lebih lama.</p>
+    </div>
+    <div class="glass-card rounded-2xl p-8">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style="background:rgba(3,105,161,0.1);">
+        <svg class="w-6 h-6" style="color:#0369a1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5"/></svg>
+      </div>
+      <h3 class="text-xl font-semibold mb-3" style="color:#0f172a;">Broadcast Campaign</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Kirim pesan massal ke ribuan kontak dengan prioritas (high/normal/low) dan penjadwalan. Progress tracking real-time.</p>
+    </div>
+    <div class="glass-card rounded-2xl p-8">
+      <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style="background:rgba(3,105,161,0.1);">
+        <svg class="w-6 h-6" style="color:#0369a1;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7.5 21L3 16.5m0 0L7.5 11M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+      </div>
+      <h3 class="text-xl font-semibold mb-3" style="color:#0f172a;">Sync Multi-Target</h3>
+      <p class="text-slate-500 text-sm leading-relaxed">Sinkronisasi data ke Supabase dan Cloudflare D1 secara otomatis. Redis cache untuk performa maksimal di VPS 414MB.</p>
     </div>
   </div>
-  <footer class="mt-20 mb-8 text-sm text-gray-600">© 2026 WaAceh. Dibangun dari Aceh.</footer>
-</main>
+</section>
+
+<!-- How It Works -->
+<section id="how" class="section" style="background:#f1f5f9;">
+  <div style="max-width:1200px;margin:0 auto;">
+    <h2 class="section-title">Cara Kerja</h2>
+    <p class="section-sub">Dari daftar sampai terhubung, hanya perlu beberapa menit.</p>
+    <div class="grid md:grid-cols-3 gap-8 mt-12">
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:rgba(3,105,161,0.1);">
+          <span class="text-2xl font-bold" style="color:#0369a1;">1</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Daftar Akun</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Buat akun gratis. Pilih paket yang sesuai — Free, Starter, atau Pro. Tanpa kartu kredit.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:rgba(3,105,161,0.1);">
+          <span class="text-2xl font-bold" style="color:#0369a1;">2</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Buat Session</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Buat session WhatsApp via dashboard. Scan QR code dengan WhatsApp kamu. Sesi otomatis terhubung.</p>
+      </div>
+      <div class="text-center">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style="background:rgba(3,105,161,0.1);">
+          <span class="text-2xl font-bold" style="color:#0369a1;">3</span>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">Integrasi & Kirim</h3>
+        <p class="text-slate-500 text-sm leading-relaxed">Gunakan SDK atau REST API untuk kirim pesan. Pasang webhook untuk menerima pesan masuk. Selesai.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing" class="section">
+  <h2 class="section-title">Harga</h2>
+  <p class="section-sub">Pilih paket yang sesuai dengan kebutuhan. Semua paket sudah termasuk anti-ban engine dan dashboard monitoring.</p>
+  <div class="grid md:grid-cols-4 gap-4 lg:gap-6 mt-8 max-w-6xl mx-auto">
+    <div class="pricing-card">
+      <h3 class="text-lg font-semibold mb-1">Free</h3>
+      <p class="text-sm text-slate-500 mb-6">Coba dulu, gratis selamanya</p>
+      <div class="mb-6"><span class="price-amount">Rp0</span><span class="price-period">/bln</span></div>
+      <ul class="space-y-2.5 mb-8">
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>1 nomor WhatsApp</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>50 pesan/hari</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>Dashboard monitoring</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> <span>AI chatbot</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg> <span>Broadcast</span></li>
+      </ul>
+      <a href="/admin/register" class="btn-secondary w-full justify-center text-center">Mulai Gratis</a>
+    </div>
+
+    <div class="pricing-card popular">
+      <h3 class="text-lg font-semibold mb-1">Starter</h3>
+      <p class="text-sm text-slate-500 mb-6">Untuk bisnis kecil</p>
+      <div class="mb-2"><span class="price-amount">Rp50rb</span><span class="price-period">/bln</span></div>
+      <div class="text-sm text-emerald-600 font-medium mb-6">Rp42rb/bln (bayar tahunan)</div>
+      <ul class="space-y-2.5 mb-8">
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>3 nomor WhatsApp</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>500 pesan/hari</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>AI chatbot 100x/hari</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>FAQ otomatis</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>Webhook API + SDK</span></li>
+      </ul>
+      <a href="/admin/register" class="btn-primary w-full justify-center text-center">Pilih Starter</a>
+    </div>
+
+    <div class="pricing-card">
+      <h3 class="text-lg font-semibold mb-1">Pro</h3>
+      <p class="text-sm text-slate-500 mb-6">Untuk bisnis berkembang</p>
+      <div class="mb-2"><span class="price-amount">Rp150rb</span><span class="price-period">/bln</span></div>
+      <div class="text-sm text-emerald-600 font-medium mb-6">Rp125rb/bln (bayar tahunan)</div>
+      <ul class="space-y-2.5 mb-8">
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>10 nomor WhatsApp</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>5.000 pesan/hari</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>AI chatbot 1.000x/hari</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>Multi-provider AI</span></li>
+        <li class="feature-check"><svg class="w-4 h-4" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span>Broadcast + Analytics</span></li>
+      </ul>
+      <a href="/admin/register" class="btn-secondary w-full justify-center text-center">Pilih Pro</a>
+    </div>
+
+    <div class="pricing-card dark">
+      <h3 class="text-lg font-semibold mb-1 text-white">Enterprise</h3>
+      <p class="text-sm text-slate-400 mb-6">Untuk skala besar</p>
+      <div class="mb-6"><span class="price-amount text-white">Custom</span></div>
+      <ul class="space-y-2.5 mb-8">
+        <li class="flex items-start gap-2 text-sm"><svg class="w-4 h-4 mt-0.5 flex-shrink-0" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span class="text-slate-300">Unlimited sessions</span></li>
+        <li class="flex items-start gap-2 text-sm"><svg class="w-4 h-4 mt-0.5 flex-shrink-0" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span class="text-slate-300">Dedicated proxy/IP</span></li>
+        <li class="flex items-start gap-2 text-sm"><svg class="w-4 h-4 mt-0.5 flex-shrink-0" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span class="text-slate-300">Custom AI model</span></li>
+        <li class="flex items-start gap-2 text-sm"><svg class="w-4 h-4 mt-0.5 flex-shrink-0" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span class="text-slate-300">SLA guarantee</span></li>
+        <li class="flex items-start gap-2 text-sm"><svg class="w-4 h-4 mt-0.5 flex-shrink-0" style="color:#22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 12.75l6 6 9-13.5"/></svg> <span class="text-slate-300">Dedicated support</span></li>
+      </ul>
+      <a href="mailto:sales@waaceh.id" class="flex items-center justify-center w-full gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition text-white" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Hubungi Sales</a>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonials -->
+<section class="section" style="background:#f1f5f9;">
+  <div style="max-width:1200px;margin:0 auto;">
+    <h2 class="section-title">Digunakan oleh</h2>
+    <p class="section-sub">WaAceh telah dipercaya oleh berbagai tim di Indonesia.</p>
+    <div class="grid md:grid-cols-3 gap-6 mt-8">
+      <div class="glass-card rounded-2xl p-7">
+        <div class="flex gap-1 mb-4"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <p class="text-slate-600 text-sm leading-relaxed mb-5">"Sejak pake WaAceh, tim CS kami bisa handle 3x lebih banyak chat. Anti-ban engine-nya bikin tenang."</p>
+        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-navy-100 flex items-center justify-center text-sm font-bold text-navy-700">TO</div><div><div class="text-sm font-semibold">T. Othman</div><div class="text-xs text-slate-500">Founder, Startup Aceh</div></div></div>
+      </div>
+      <div class="glass-card rounded-2xl p-7">
+        <div class="flex gap-1 mb-4"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <p class="text-slate-600 text-sm leading-relaxed mb-5">"SDK PHP-nya bikin integrasi cuma 15 menit. Tinggal composer install, langsung jalan."</p>
+        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-navy-100 flex items-center justify-center text-sm font-bold text-navy-700">RF</div><div><div class="text-sm font-semibold">R. Fadhil</div><div class="text-xs text-slate-500">Developer, Medan</div></div></div>
+      </div>
+      <div class="glass-card rounded-2xl p-7">
+        <div class="flex gap-1 mb-4"><svg class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+        </div>
+        <p class="text-slate-600 text-sm leading-relaxed mb-5">"Broadcast campaign fitur paling saya suka. Bisa kirim promosi ke ribuan pelanggan dengan timing yang diatur otomatis."</p>
+        <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full bg-navy-100 flex items-center justify-center text-sm font-bold text-navy-700">CU</div><div><div class="text-sm font-semibold">Cut Umra</div><div class="text-xs text-slate-500">Marketing, Banda Aceh</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="section">
+  <h2 class="section-title">Pertanyaan Umum</h2>
+  <p class="section-sub">Ada yang ingin ditanyakan? Mungkin jawabannya ada di bawah.</p>
+  <div class="max-w-3xl mx-auto mt-8 space-y-4">
+    <details class="glass-card rounded-xl open:bg-white transition-all" style="cursor:pointer;">
+      <summary class="px-6 py-4 font-semibold text-sm flex items-center justify-between" style="color:#0f172a;">Apa itu WaAceh? <svg class="w-4 h-4 transition-transform" style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></summary>
+      <p class="px-6 pb-5 text-sm text-slate-500 leading-relaxed">WaAceh adalah WhatsApp Gateway yang memungkinkan kamu mengelola banyak nomor WhatsApp dari satu dashboard. Cocok untuk customer service, broadcast marketing, dan integrasi AI chatbot.</p>
+    </details>
+    <details class="glass-card rounded-xl open:bg-white transition-all" style="cursor:pointer;">
+      <summary class="px-6 py-4 font-semibold text-sm flex items-center justify-between" style="color:#0f172a;">Apakah nomor saya bisa kena banned? <svg class="w-4 h-4 transition-transform" style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></summary>
+      <p class="px-6 pb-5 text-sm text-slate-500 leading-relaxed">WaAceh memiliki anti-ban engine 11 tahap yang mengatur timing, volume, dan diversity pengiriman agar menyerupai perilaku manusia. Risiko banned tetap ada (karena ini unofficial API), tapi kami optimasi agar nomor bertahan 6-12+ bulan dengan aktivitas normal.</p>
+    </details>
+    <details class="glass-card rounded-xl open:bg-white transition-all" style="cursor:pointer;">
+      <summary class="px-6 py-4 font-semibold text-sm flex items-center justify-between" style="color:#0f172a;">Bahasa pemrograman apa yang didukung? <svg class="w-4 h-4 transition-transform" style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></summary>
+      <p class="px-6 pb-5 text-sm text-slate-500 leading-relaxed">Kami menyediakan SDK untuk PHP (Composer) dan Node.js (npm). Jika bahasa kamu belum ada SDK-nya, kamu bisa langsung menggunakan REST API dengan API key atau JWT.</p>
+    </details>
+    <details class="glass-card rounded-xl open:bg-white transition-all" style="cursor:pointer;">
+      <summary class="px-6 py-4 font-semibold text-sm flex items-center justify-between" style="color:#0f172a;">Bagaimana cara mulai menggunakan WaAceh? <svg class="w-4 h-4 transition-transform" style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></summary>
+      <p class="px-6 pb-5 text-sm text-slate-500 leading-relaxed">Daftar akun gratis, login ke dashboard, buat session WhatsApp, scan QR code, and selesai. Kamu bisa langsung kirim pesan via API dalam hitungan menit.</p>
+    </details>
+    <details class="glass-card rounded-xl open:bg-white transition-all" style="cursor:pointer;">
+      <summary class="px-6 py-4 font-semibold text-sm flex items-center justify-between" style="color:#0f172a;">Apakah ada garansi uptime? <svg class="w-4 h-4 transition-transform" style="color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></summary>
+      <p class="px-6 pb-5 text-sm text-slate-500 leading-relaxed">Ya, untuk paket Enterprise kami menyediakan SLA guarantee. Paket Pro dan Starter menggunakan infrastruktur yang sama dengan prioritas server yang berbeda.</p>
+    </details>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="section text-center" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);border-radius:2rem;margin:0 1.5rem 3rem;max-width:1200px;">
+  <div style="padding:4rem 2rem;">
+    <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Siap Mulai?</h2>
+    <p class="text-slate-300 max-w-lg mx-auto mb-8 text-lg">Buat akun gratis sekarang. Tidak perlu kartu kredit. Dapatkan 1 nomor WhatsApp gratis selamanya.</p>
+    <div class="flex flex-wrap gap-4 justify-center">
+      <a href="/admin/register" class="btn-primary px-8 py-3.5 text-base" style="background:#0369a1;">Daftar Gratis <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg></a>
+      <a href="/admin/login" class="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm transition border text-white" style="border-color:rgba(255,255,255,0.2);" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">Masuk ke Dashboard</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer style="background:#f8fafc;border-top:1px solid #e2e8f0;">
+  <div class="max-w-6xl mx-auto px-6 py-12">
+    <div class="grid md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center gap-2.5 text-lg font-bold mb-4" style="color:#0f172a;">
+          <svg class="w-7 h-7" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0369a1" fill-opacity="0.15"/><path d="M16 6c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6z" fill="#0369a1"/><path d="M16 10c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z" fill="white"/></svg>
+          WaAceh
+        </div>
+        <p class="text-sm text-slate-500 leading-relaxed">WhatsApp Gateway untuk Aceh dan Indonesia. Dikelola dari Aceh, untuk negeri.</p>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-4" style="color:#0f172a;">Produk</h4>
+        <ul class="space-y-2.5 text-sm text-slate-500">
+          <li><a href="#features" class="hover:text-blue-600 transition">Fitur</a></li>
+          <li><a href="#pricing" class="hover:text-blue-600 transition">Harga</a></li>
+          <li><a href="/admin/login" class="hover:text-blue-600 transition">Dashboard</a></li>
+          <li><a href="/api/health" class="hover:text-blue-600 transition">Health</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-4" style="color:#0f172a;">SDK</h4>
+        <ul class="space-y-2.5 text-sm text-slate-500">
+          <li><span class="text-slate-400">PHP (Composer)</span></li>
+          <li><span class="text-slate-400">Node.js (npm)</span></li>
+          <li><span class="text-slate-400">REST API</span></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-semibold text-sm mb-4" style="color:#0f172a;">Kontak</h4>
+        <ul class="space-y-2.5 text-sm text-slate-500">
+          <li><a href="mailto:sales@waaceh.id" class="hover:text-blue-600 transition">sales@waaceh.id</a></li>
+          <li><span class="text-slate-400">Aceh, Indonesia</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-slate-200 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400">
+      <span>© 2026 WaAceh. Dibangun dari Aceh.</span>
+      <div class="flex gap-6">
+        <a href="/admin/login" class="hover:text-slate-600 transition">Masuk</a>
+        <a href="/admin/register" class="hover:text-slate-600 transition">Daftar</a>
+        <span class="text-slate-300">|</span>
+        <a href="https://wa.gampong.web.id/api/health" class="hover:text-slate-600 transition">Health</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('details').forEach(d => {
+  d.querySelector('summary')?.addEventListener('click', e => {
+    const icon = d.querySelector('summary svg');
+    if (icon) { setTimeout(() => icon.style.transform = d.open ? 'rotate(180deg)' : 'rotate(0deg)', 10); }
+  });
+});
+</script>
 </body>
 </html>

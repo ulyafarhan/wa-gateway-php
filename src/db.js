@@ -219,6 +219,17 @@ if (!bjColumns.includes('message')) {
     db.exec("ALTER TABLE broadcast_jobs ADD COLUMN message TEXT");
     console.log('[db] Migration: added message to broadcast_jobs');
 }
+if (!bjColumns.includes('schedule_at')) {
+    db.exec("ALTER TABLE broadcast_jobs ADD COLUMN schedule_at INTEGER");
+    console.log('[db] Migration: added schedule_at to broadcast_jobs');
+}
+
+const baColumns = db.prepare("PRAGMA table_info(broadcast_assignments)").all().map(c => c.name);
+if (!baColumns.includes('offset')) {
+    db.exec("ALTER TABLE broadcast_assignments ADD COLUMN offset INTEGER DEFAULT 0");
+    db.exec("ALTER TABLE broadcast_assignments ADD COLUMN total INTEGER DEFAULT 0");
+    console.log('[db] Migration: added offset+total to broadcast_assignments');
+}
 
 // ── Indexes for new tables ──────────────────────────────────────────────
 db.exec("CREATE INDEX IF NOT EXISTS idx_tenants_api_key ON tenants(api_key)");

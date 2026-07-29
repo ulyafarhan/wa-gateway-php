@@ -74,9 +74,7 @@ const frontendDist = path.join(__dirname, 'frontend', 'dist');
 app.use('/admin/assets', express.static(path.join(frontendDist, 'assets'), { maxAge: '7d', immutable: true }));
 app.get('/admin/favicon.ico', (_, r) => r.sendFile(path.join(frontendDist, 'favicon.ico')));
 
-// Landing page
-const landingHtml = fs.readFileSync(path.join(__dirname, 'public', 'landing.html'), 'utf-8');
-app.get('/', (req, res) => res.set('Content-Type', 'text/html; charset=utf-8').send(landingHtml));
+// ponytail: SPA handles / via Vue router — no more static HTML landing
 
 // Admin SPA — catch-all for /admin/* routes
 const indexHtml = fs.readFileSync(path.join(frontendDist, 'index.html'), 'utf-8');

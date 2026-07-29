@@ -78,6 +78,8 @@ function applyContext(tpl, ctx) {
 }
 
 export function sim(a, b) {
+    if (!a && !b) return 1;
+    if (!a || !b) return 0;
     const m = a.length, n = b.length;
     const d = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
     for (let i = 0; i <= m; i++) d[i][0] = i;

@@ -168,8 +168,6 @@ async function connectSession(sessionId) {
             }
         });
 
-        session.sock.ev.on('connection.update', () => {});
-
     } catch (err) {
         logger.error(`[${sessionId}] Connect failed: ${err.message}`);
         session.status = 'disconnected';

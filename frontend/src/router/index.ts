@@ -3,9 +3,16 @@ import { createRouter, createWebHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   scrollBehavior(to, _from, savedPosition) {
+    if (to.hash) return { el: to.hash, behavior: 'smooth' }
     return savedPosition || { left: 0, top: 0 }
   },
   routes: [
+    {
+      path: '/',
+      name: 'Landing',
+      component: () => import('../views/Landing/LandingPage.vue'),
+      meta: { title: 'WaAceh — WhatsApp Gateway Indonesia' },
+    },
     {
       path: '/login',
       name: 'Login',
@@ -19,7 +26,7 @@ const router = createRouter({
       meta: { title: 'Register', layout: 'fullscreen', guest: true },
     },
     {
-      path: '/',
+      path: '/dashboard',
       name: 'Dashboard',
       component: () => import('../views/Ecommerce.vue'),
       meta: { requiresAuth: true, title: 'Dashboard', roles: ['superadmin', 'admin', 'manager', 'operator', 'viewer'] },

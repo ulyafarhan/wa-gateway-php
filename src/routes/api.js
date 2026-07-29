@@ -76,7 +76,7 @@ function requireTenantOwnership(req, res, next) {
 
 // ponytail: SSRF protection — block private IPs
 function isPrivateIP(hostname) {
-    return /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|0\.|localhost|169\.254\.|metadata\.|fc00:|fd00:|fe80:|::1$|0:0:0:0:0:0:0:1$)/.test(hostname);
+    return /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|0\.|localhost$|169\.254\.|metadata\.|::$|::1$|0:0:0:0:0:0:0:1$|::ffff:(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.)|fc00:|fd00:|fe80:)/i.test(hostname);
 }
 
 // ── Health ──────────────────────────────────────────────────────────────

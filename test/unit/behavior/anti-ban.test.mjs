@@ -125,9 +125,7 @@ describe('DiversityEngine _sim', () => {
 
   it('Levenshtein dengan string kosong', () => {
     const de = new DiversityEngine();
-    // Bug: _sim('', '') return NaN karena division by zero
-    // ponytail: tidak ada guard untuk Math.max(m,n) === 0
-    assert.ok(Number.isNaN(de._sim('', '')));
+    assert.equal(de._sim('', ''), 1);
     assert.equal(de._sim('abc', ''), 0);
     assert.equal(de._sim('', 'abc'), 0);
   });
