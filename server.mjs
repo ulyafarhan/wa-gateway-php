@@ -76,6 +76,21 @@ app.get('/admin/favicon.ico', (_, r) => r.sendFile(path.join(frontendDist, 'favi
 
 // ponytail: SPA handles / via Vue router — no more static HTML landing
 
+// ── Swagger UI ──────────────────────────────────────────────────────────
+const swaggerHtml = `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WaAceh API Docs</title>
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
+</head>
+<body><div id="swagger-ui"></div>
+<script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script>SwaggerUIBundle({ url: "/api/docs/openapi.json", dom_id: "#swagger-ui", deepLinking: true })</script>
+</body></html>`;
+
+app.get('/api/docs', (req, res) => res.type('text/html').send(swaggerHtml));
+app.get('/api/docs/openapi.json', (req, res) => res.sendFile(path.join(__dirname, 'docs', 'openapi.json')));
+
 // Admin SPA — catch-all for /admin/* routes
 const indexHtml = fs.readFileSync(path.join(frontendDist, 'index.html'), 'utf-8');
 app.use('/admin', (req, res) => {

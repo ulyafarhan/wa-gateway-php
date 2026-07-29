@@ -1,0 +1,28 @@
+version: '3.8'
+services:
+  wa-gateway:
+    build: .
+    container_name: wa-gateway
+    restart: unless-stopped
+    ports:
+      - "2785:2785"
+    environment:
+      - JWT_SECRET=${JWT_SECRET}
+      - API_KEY=${API_KEY}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - SEED_ADMIN_USER=${SEED_ADMIN_USER:-admin}
+      - SEED_ADMIN_PASS=${SEED_ADMIN_PASS}
+      - SEED_ADMIN_EMAIL=${SEED_ADMIN_EMAIL:-admin@waaceh.id}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:2785}
+      - LOG_LEVEL=${LOG_LEVEL:-silent}
+      - NODE_ENV=${NODE_ENV:-production}
+    volumes:
+      - ./data:/app/data
+      - ./auth_info:/app/auth_info
+      - ./public:/app/public
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,8 @@
+node_modules/
+.git/
+data/
+auth_info/
+test/
+frontend/src/
+*.md
+*.log

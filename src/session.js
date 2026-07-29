@@ -168,6 +168,25 @@ async function connectSession(sessionId) {
             }
         });
 
+        // ponytail: call handling — events + auto-reject
+        session.sock.ev.on('call', (calls) => {
+            for (const call of calls) {
+                enqueueWebhook(sessionId, 'call.received', {
+                    from: call.from,
+                    id: call.id,
+                    status: call.status,
+                    isVideo: call.isVideo,
+                    timestamp: Date.now(),
+                });
+                logger.info(`[${sessionId}] Call from ${call.from}: ${call.status}`);
+                if (process.env.AUTO_REJECT_CALLS === 'true') {
+                    session.sock.rejectCall(call.id, call.from).catch(e => {
+                        logger.error(`[${sessionId}] Reject call failed: ${e.message}`);
+                    });
+                }
+            }
+        });
+
     } catch (err) {
         logger.error(`[${sessionId}] Connect failed: ${err.message}`);
         session.status = 'disconnected';
