@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Fira+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600;700&display=swap')
 layer(base);
 
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap')
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap')
 layer(base);
 
 @import 'tailwindcss';
@@ -776,21 +776,17 @@ span.flatpickr-weekday,
 }
 
 /* ── Landing Page Global Styles ── */
-.font-heading { font-family: 'Poppins', sans-serif; }
-.font-body { font-family: 'Open Sans', sans-serif; }
-
-.glass-nav { background: rgba(255,255,255,0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.3); }
-.glass-card { background: rgba(255,255,255,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); transition: all 0.3s ease; }
-.glass-card:hover { background: rgba(255,255,255,0.8); transform: translateY(-4px); box-shadow: 0 20px 60px rgba(15,23,42,0.08); }
+.font-heading { font-family: 'Plus Jakarta Sans', sans-serif; }
+.font-body { font-family: 'Plus Jakarta Sans', sans-serif; }
 
 .section { padding: 5rem 1.5rem; max-width: 1200px; margin: 0 auto; }
-.section-title { font-family: 'Poppins', sans-serif; font-size: 2.25rem; font-weight: 700; text-align: center; margin-bottom: 0.75rem; color: #0f172a; }
-.section-sub { font-size: 1.1rem; color: #64748b; text-align: center; max-width: 600px; margin: 0 auto 3.5rem; line-height: 1.7; }
+.section-title { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 2.25rem; font-weight: 700; text-align: center; margin-bottom: 0.75rem; color: #1E3A8A; }
+.section-sub { font-size: 1.1rem; color: #64748B; text-align: center; max-width: 600px; margin: 0 auto 3.5rem; line-height: 1.7; }
 
-.btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; transition: all 0.25s ease; cursor: pointer; text-decoration: none; background: #0369a1; color: white; border: none; }
-.btn-primary:hover { background: #0284c7; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(3,105,161,0.3); }
-.btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; transition: all 0.25s ease; cursor: pointer; text-decoration: none; background: transparent; color: #334155; border: 1.5px solid #e2e8f0; }
-.btn-secondary:hover { border-color: #0369a1; color: #0369a1; transform: translateY(-2px); }
+.btn-primary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; transition: all 0.25s ease; cursor: pointer; text-decoration: none; background: #3B82F6; color: white; border: none; }
+.btn-primary:hover { background: #2563EB; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59,130,246,0.3); }
+.btn-secondary { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.75rem; border-radius: 0.75rem; font-weight: 600; font-size: 0.9rem; transition: all 0.25s ease; cursor: pointer; text-decoration: none; background: transparent; color: #475569; border: 1.5px solid #E2E8F0; }
+.btn-secondary:hover { border-color: #3B82F6; color: #3B82F6; transform: translateY(-2px); }
 .nav-link { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem; border-radius: 0.5rem; font-weight: 500; font-size: 0.875rem; transition: all 0.2s ease; cursor: pointer; text-decoration: none; color: #64748b; }
 .nav-link:hover { color: #0369a1; background: rgba(3,105,161,0.06); }
 

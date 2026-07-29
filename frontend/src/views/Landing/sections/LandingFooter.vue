@@ -1,46 +1,45 @@
 <template>
-  <footer style="background:#f8fafc;border-top:1px solid #e2e8f0;">
+  <footer style="background:#F8FAFC;border-top:1px solid #E2E8F0;">
     <div class="max-w-6xl mx-auto px-6 py-12">
       <div class="grid md:grid-cols-4 gap-8">
         <div>
-          <div class="flex items-center gap-2.5 text-lg font-heading font-bold mb-4" style="color:#0f172a;">
-            <svg class="w-7 h-7" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#0369a1" fill-opacity="0.15"/><path d="M16 6c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6z" fill="#0369a1"/><path d="M16 10c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z" fill="white"/></svg>
+          <div class="flex items-center gap-2.5 text-lg font-bold mb-4" style="color:#1E3A8A;">
+            <svg class="w-7 h-7" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="8" fill="#1E3A8A" fill-opacity="0.12"/><path d="M16 6c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10S21.5 6 16 6z" fill="#1E3A8A"/><path d="M16 10c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z" fill="white"/></svg>
             WaAceh
           </div>
-          <p class="text-sm text-slate-500 leading-relaxed">WhatsApp Gateway untuk Aceh dan Indonesia. Dikelola dari Aceh, untuk negeri.</p>
+          <p class="text-sm leading-relaxed" style="color:#64748B;">WhatsApp Gateway untuk Aceh dan Indonesia. Dikelola dari Aceh untuk negeri.</p>
         </div>
         <div>
-          <h4 class="font-heading font-semibold text-sm mb-4" style="color:#0f172a;">Produk</h4>
-          <ul class="space-y-2.5 text-sm text-slate-500">
-            <li><a href="#features" class="hover:text-blue-600 transition">Fitur</a></li>
-            <li><a href="#pricing" class="hover:text-blue-600 transition">Harga</a></li>
-            <li><router-link to="/login" class="hover:text-blue-600 transition">Dashboard</router-link></li>
-            <li><a href="https://waaceh.biz.id/api/health" class="hover:text-blue-600 transition">Health</a></li>
+          <h4 class="font-semibold text-sm mb-4" style="color:#1E293B;">Produk</h4>
+          <ul class="space-y-2.5 text-sm" style="color:#64748B;">
+            <li><a href="#features" class="hover:underline" style="color:#64748B;">Fitur</a></li>
+            <li><a href="#pricing" class="hover:underline" style="color:#64748B;">Harga</a></li>
+            <li><router-link to="/login" class="hover:underline" style="color:#64748B;">Dashboard</router-link></li>
+            <li><a href="/api/health" class="hover:underline" style="color:#64748B;">Status Server</a></li>
           </ul>
         </div>
         <div>
-          <h4 class="font-heading font-semibold text-sm mb-4" style="color:#0f172a;">SDK</h4>
-          <ul class="space-y-2.5 text-sm text-slate-500">
-            <li><span class="text-slate-400">PHP (Composer)</span></li>
-            <li><span class="text-slate-400">Node.js (npm)</span></li>
-            <li><span class="text-slate-400">REST API</span></li>
+          <h4 class="font-semibold text-sm mb-4" style="color:#1E293B;">SDK</h4>
+          <ul class="space-y-2.5 text-sm" style="color:#64748B;">
+            <li>PHP (Composer)</li>
+            <li>Node.js (npm)</li>
+            <li>Python (pip)</li>
           </ul>
         </div>
         <div>
-          <h4 class="font-heading font-semibold text-sm mb-4" style="color:#0f172a;">Kontak</h4>
-          <ul class="space-y-2.5 text-sm text-slate-500">
-            <li><a href="mailto:sales@waaceh.id" class="hover:text-blue-600 transition">sales@waaceh.id</a></li>
-            <li><span class="text-slate-400">Aceh, Indonesia</span></li>
+          <h4 class="font-semibold text-sm mb-4" style="color:#1E293B;">Kontak</h4>
+          <ul class="space-y-2.5 text-sm">
+            <li><a href="mailto:sales@waaceh.id" class="hover:underline" style="color:#3B82F6;">sales@waaceh.id</a></li>
+            <li style="color:#64748B;">Aceh, Indonesia</li>
           </ul>
         </div>
       </div>
-      <div class="border-t border-slate-200 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-400">
-        <span>© 2026 WaAceh. Dibangun dari Aceh.</span>
+      <div class="border-t pt-6 mt-10 flex flex-col md:flex-row justify-between items-center gap-4 text-sm" style="border-color:#E2E8F0;color:#94A3B8;">
+        <span>&copy; 2026 WaAceh. Dibangun dari Aceh.</span>
         <div class="flex gap-6">
-          <router-link to="/login" class="hover:text-slate-600 transition">Masuk</router-link>
-          <router-link to="/register" class="hover:text-slate-600 transition">Daftar</router-link>
-          <span class="text-slate-300">|</span>
-          <a href="/api/health" class="hover:text-slate-600 transition">Health</a>
+          <router-link to="/login" class="hover:underline" style="color:#94A3B8;">Masuk</router-link>
+          <router-link to="/register" class="hover:underline" style="color:#94A3B8;">Daftar</router-link>
+          <a href="/api/health" class="hover:underline" style="color:#94A3B8;">Health</a>
         </div>
       </div>
     </div>
