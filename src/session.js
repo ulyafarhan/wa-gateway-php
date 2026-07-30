@@ -114,6 +114,20 @@ async function connectSession(sessionId) {
                 db.prepareUpdateSessionStatus.run('waiting_qr', Date.now(), sessionId);
                 enqueueWebhook(sessionId, 'session.qr_received', {});
                 logger.info(`[${sessionId}] QR received`);
+
+                // ponytail: QR timeout — reconnect after 60s so user gets a fresh QR
+                if (session.qrTimer) clearTimeout(session.qrTimer);
+                session.qrTimer = setTimeout(() => {
+                    const s = sessions.get(sessionId);
+                    if (s && s.status === 'waiting_qr') {
+                        logger.info(`[${sessionId}] QR timeout (60s), reconnecting for fresh QR`);
+                        if (s.sock) try { s.sock.end(); } catch {}
+                        s.qr = null;
+                        s.status = 'disconnected';
+                        s.backoff = 1000; // reset backoff for quick retry
+                        connectSession(sessionId);
+                    }
+                }, 60000);
             }
 
             if (connection === 'close') {
@@ -157,6 +171,7 @@ async function connectSession(sessionId) {
             }
 
             if (connection === 'open') {
+                if (session.qrTimer) { clearTimeout(session.qrTimer); session.qrTimer = null; }
                 session.status = 'connected';
                 session.qr = null;
                 session.backoff = 1000;

@@ -6,13 +6,16 @@ import db from './db.js';
 
 const cache = new Map();
 
-const ENC_KEY = process.env.ENCRYPTION_KEY
-    ? Buffer.from(process.env.ENCRYPTION_KEY.trim(), 'hex')
-    : (() => {
-        const key = crypto.randomBytes(32).toString('hex');
-        console.warn('[auth-state] ENCRYPTION_KEY not set — generated random key. Persist this across restarts:', key);
-        return Buffer.from(key, 'hex');
-    })();
+const ENC_KEY_HEX = process.env.ENCRYPTION_KEY?.trim();
+if (!ENC_KEY_HEX) {
+    console.error('[auth-state] FATAL: ENCRYPTION_KEY not set in .env. Generate one: node -e "console.log(require(\"crypto\").randomBytes(32).toString(\"hex\"))"');
+    process.exit(1);
+}
+if (!/^[0-9a-f]{64}$/i.test(ENC_KEY_HEX)) {
+    console.error('[auth-state] FATAL: ENCRYPTION_KEY must be 64 hex characters (32 bytes). Got:', ENC_KEY_HEX.length, 'chars');
+    process.exit(1);
+}
+const ENC_KEY = Buffer.from(ENC_KEY_HEX, 'hex');
 
 function encrypt(text) {
     const iv = crypto.randomBytes(16);
@@ -42,7 +45,10 @@ function decryptJSON(str) {
             return JSON.parse(decrypt(parsed), (k, v) => v?.type === 'Buffer' && Array.isArray(v?.data) ? Buffer.from(v.data) : v);
         }
         return JSON.parse(str, (k, v) => v?.type === 'Buffer' && Array.isArray(v?.data) ? Buffer.from(v.data) : v);
-    } catch { return null; }
+    } catch (e) {
+        console.error(`[auth-state] decryptJSON failed for session. ENCRYPTION_KEY mismatch?`, e.message);
+        return null;
+    }
 }
 
 export function useSQLiteAuthState(sessionId) {

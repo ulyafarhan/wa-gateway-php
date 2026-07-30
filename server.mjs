@@ -161,7 +161,7 @@ async function shutdown() {
     logger.info('Shutting down...');
     for (const [sid, session] of sessions.entries()) {
         if (session.sock) {
-            try { await session.sock.logout(); } catch {}
+            // ponytail: jangan logout() — itu mengirim sinyal logout ke WA, session harus scan QR ulang
             try { session.sock.end(); } catch {}
         }
     }
